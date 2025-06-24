@@ -47,6 +47,13 @@
   - [x] Use History API (pushState) for URL updates without page reload
   - [x] Configure Vite for SPA routing
   - [x] Add dev:standalone script to package.json
+- [x] Implement async video generation with loading states
+  - [x] Added status field to videos table with migration
+  - [x] Modified video API to create placeholder entry immediately
+  - [x] Updated UI to show loading states for generating videos
+  - [x] Videos now show in Media Library immediately with progress indicator
+  - [x] Auto-refresh updates video status from generating to completed
+  - [x] Added proper error handling for failed video generations
 
 ## Pending Tasks
 - [ ] Set up audio processing pipeline
