@@ -19,6 +19,13 @@
 - [ ] Generate first lofi tracks
 
 ## Recently Completed (Lofi Studio React App)
+- [x] Fix img2vid generation error in worker-api-only.ts
+  - [x] Updated all Fal.ai endpoints to use queue.fal.run format
+  - [x] Added support for Kling 2.0 and 2.1 (latest versions)
+  - [x] Changed default model from kling-1.6 to kling-2.1
+  - [x] Implemented queue polling logic for async generation
+  - [x] Fixed both video and artwork generation endpoints
+  - [x] Improved error handling to show API error details
 - [x] Implement Publish/Distribution tab functionality in React app
   - [x] Create PublishTab component with YouTube publishing
   - [x] Add DistroKid preparation display
