@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Image, Loader2, Check, X } from 'lucide-react'
+import { Image, Loader2, Check, X, RefreshCw } from 'lucide-react'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { Textarea } from './ui/Textarea'
@@ -30,7 +30,7 @@ export function ArtworkTabSimple() {
   
   // State for video generation
   const [selectedImageForVideo, setSelectedImageForVideo] = useState<string | null>(null)
-  const [videoModel, setVideoModel] = useState('kling-1.6')
+  const [videoModel, setVideoModel] = useState('kling-2.1')
   const [videoPrompt, setVideoPrompt] = useState('')
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
   const [videoDuration, setVideoDuration] = useState(5)
@@ -74,15 +74,24 @@ export function ArtworkTabSimple() {
     try {
       const response = await fetch('/api/videos')
       const data = await response.json()
+      console.log('Fetched videos:', data)
       setVideos(data)
     } catch (error) {
       console.error('Failed to fetch videos:', error)
+      setError('Failed to fetch videos: ' + error.message)
     }
   }, [])
   
   useEffect(() => {
     fetchArtwork()
     fetchVideos()
+    
+    // Refresh videos every 5 seconds to catch completed generations
+    const interval = setInterval(() => {
+      fetchVideos()
+    }, 5000)
+    
+    return () => clearInterval(interval)
   }, [fetchArtwork, fetchVideos])
   
   // Generate artwork
@@ -267,7 +276,8 @@ export function ArtworkTabSimple() {
                 onChange={(e) => setVideoModel(e.target.value)}
                 className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="kling-1.6">Kling 1.6 (Recommended)</option>
+                <option value="kling-2.1">Kling 2.1 (Latest)</option>
+                <option value="kling-2.0">Kling 2.0</option>
                 <option value="kling-1.5">Kling 1.5</option>
                 <option value="kling-1.0">Kling 1.0</option>
               </select>
@@ -375,6 +385,17 @@ export function ArtworkTabSimple() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Media Library</h2>
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                fetchArtwork()
+                fetchVideos()
+              }}
+              title="Refresh media"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
             <Button
               variant={mediaFilter === 'all' ? 'default' : 'secondary'}
               size="sm"

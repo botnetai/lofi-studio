@@ -467,10 +467,10 @@ app.post('/api/artwork', async (c) => {
   
   // Map model names to Fal.ai endpoints
   const modelEndpoints = {
-    'flux-schnell': 'https://queue.fal.run/fal-ai/flux/schnell',
-    'flux-dev': 'https://queue.fal.run/fal-ai/flux/dev',
-    'flux-pro': 'https://queue.fal.run/fal-ai/flux-pro',
-    'stable-diffusion-xl': 'https://queue.fal.run/fal-ai/stable-diffusion-xl'
+    'flux-schnell': 'https://fal.run/fal-ai/flux/schnell',
+    'flux-dev': 'https://fal.run/fal-ai/flux/dev',
+    'flux-pro': 'https://fal.run/fal-ai/flux-pro',
+    'stable-diffusion-xl': 'https://fal.run/fal-ai/stable-diffusion-xl'
   }
   
   const endpoint = modelEndpoints[model] || modelEndpoints['flux-schnell']
@@ -589,6 +589,8 @@ app.post('/api/video', async (c) => {
     tailImageId = null
   } = body
   
+  console.log('Video generation request:', { imageId, model, duration, mode })
+  
   try {
     // Get image URL
     const artwork = await c.env.DB.prepare(
@@ -624,38 +626,40 @@ app.post('/api/video', async (c) => {
     const modelConfigs = {
       'kling-2.1': {
         endpoint: mode === 'pro' 
-          ? 'https://queue.fal.run/fal-ai/kling-video/v2.1/pro/image-to-video'
+          ? 'https://fal.run/fal-ai/kling-video/v2.1/pro/image-to-video'
           : mode === 'master'
-          ? 'https://queue.fal.run/fal-ai/kling-video/v2.1/master/image-to-video'
-          : 'https://queue.fal.run/fal-ai/kling-video/v2.1/standard/image-to-video',
+          ? 'https://fal.run/fal-ai/kling-video/v2.1/master/image-to-video'
+          : 'https://fal.run/fal-ai/kling-video/v2.1/standard/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement, cinematic',
           duration: duration.toString(),
           cfg_scale: cfgScale,
+          negative_prompt: 'blur, distort, and low quality',
           seed: seed === -1 ? Math.floor(Math.random() * 1000000) : seed,
           ...(fullTailImageUrl && { tail_image_url: fullTailImageUrl })
         }
       },
       'kling-2.0': {
         endpoint: mode === 'pro' 
-          ? 'https://queue.fal.run/fal-ai/kling-video/v2/pro/image-to-video'
+          ? 'https://fal.run/fal-ai/kling-video/v2/pro/image-to-video'
           : mode === 'master'
-          ? 'https://queue.fal.run/fal-ai/kling-video/v2/master/image-to-video'
-          : 'https://queue.fal.run/fal-ai/kling-video/v2/standard/image-to-video',
+          ? 'https://fal.run/fal-ai/kling-video/v2/master/image-to-video'
+          : 'https://fal.run/fal-ai/kling-video/v2/standard/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement, cinematic',
           duration: duration.toString(),
           cfg_scale: cfgScale,
+          negative_prompt: 'blur, distort, and low quality',
           seed: seed === -1 ? Math.floor(Math.random() * 1000000) : seed,
           ...(fullTailImageUrl && { tail_image_url: fullTailImageUrl })
         }
       },
       'kling-1.6': {
         endpoint: mode === 'pro' 
-          ? 'https://queue.fal.run/fal-ai/kling-video/v1.6/pro/image-to-video'
-          : 'https://queue.fal.run/fal-ai/kling-video/v1.6/standard/image-to-video',
+          ? 'https://fal.run/fal-ai/kling-video/v1.6/pro/image-to-video'
+          : 'https://fal.run/fal-ai/kling-video/v1.6/standard/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement, cinematic',
@@ -666,7 +670,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'kling-1.5': {
-        endpoint: 'https://queue.fal.run/fal-ai/kling-video/v1.5/pro/image-to-video',
+        endpoint: 'https://fal.run/fal-ai/kling-video/v1.5/pro/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement',
@@ -676,7 +680,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'kling-1.0': {
-        endpoint: 'https://queue.fal.run/fal-ai/kling-video/v1/pro/image-to-video',
+        endpoint: 'https://fal.run/fal-ai/kling-video/v1/pro/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement',
@@ -686,7 +690,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'stable-video': {
-        endpoint: 'https://queue.fal.run/fal-ai/stable-video-diffusion',
+        endpoint: 'https://fal.run/fal-ai/stable-video-diffusion',
         params: {
           image_url: fullImageUrl,
           motion_bucket_id: 127,
@@ -696,7 +700,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'animatediff-sparsectrl': {
-        endpoint: 'https://queue.fal.run/fal-ai/animatediff-sparsectrl-lcm',
+        endpoint: 'https://fal.run/fal-ai/animatediff-sparsectrl-lcm',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement, cinematic motion',
@@ -708,7 +712,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'animatediff-lightning': {
-        endpoint: 'https://queue.fal.run/fal-ai/animatediff-v2v',
+        endpoint: 'https://fal.run/fal-ai/animatediff-v2v',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth cinematic camera movement',
@@ -720,7 +724,18 @@ app.post('/api/video', async (c) => {
       }
     }
     
-    const config = modelConfigs[model] || modelConfigs['stable-video']
+    const config = modelConfigs[model]
+    if (!config) {
+      console.error('Unknown model:', model)
+      console.error('Available models:', Object.keys(modelConfigs))
+      return c.json({ 
+        error: `Unknown model: ${model}. Available models: ${Object.keys(modelConfigs).join(', ')}`
+      }, 400)
+    }
+    
+    console.log('Using model config:', model)
+    console.log('Endpoint:', config.endpoint)
+    console.log('Params:', JSON.stringify(config.params, null, 2))
     
     const response = await fetch(config.endpoint, {
       method: 'POST',
@@ -731,26 +746,48 @@ app.post('/api/video', async (c) => {
       body: JSON.stringify(config.params)
     })
     
+    const responseText = await response.text()
+    console.log('Raw response:', responseText.substring(0, 1000))
+    
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Video generation failed:', errorText)
-      throw new Error(`Video generation error: ${response.statusText}. ${errorText}`)
+      console.error('Video generation failed:', responseText)
+      // Try to parse error response
+      try {
+        const errorData = JSON.parse(responseText)
+        const errorMessage = errorData.detail || errorData.error || errorData.message || response.statusText
+        throw new Error(`Video generation error: ${errorMessage}`)
+      } catch (e) {
+        throw new Error(`Video generation error: ${response.statusText}. ${responseText}`)
+      }
     }
     
-    const data = await response.json()
-    console.log('Video generation response:', data)
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch (e) {
+      console.error('Failed to parse response as JSON:', responseText)
+      throw new Error('Invalid JSON response from Fal.ai API')
+    }
+    
+    console.log('Video generation response:', JSON.stringify(data, null, 2))
     
     // Handle queue response - if we get a request_id, we need to poll for the result
     if (data.request_id && data.status_url) {
-      console.log('Got queue response, polling for result...')
+      console.log('Got queue response, will poll for result...')
+      console.log('Request ID:', data.request_id)
       
       // Poll for the result
       let result = data
       let attempts = 0
       const maxAttempts = 120 // 10 minutes with 5 second intervals
       
+      console.log('Starting to poll for video generation result...')
+      console.log('Status URL:', data.status_url)
+      
       while (result.status !== 'completed' && attempts < maxAttempts) {
         await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
+        
+        console.log(`Polling attempt ${attempts + 1}/${maxAttempts}...`)
         
         const statusResponse = await fetch(data.status_url, {
           headers: {
@@ -759,14 +796,17 @@ app.post('/api/video', async (c) => {
         })
         
         if (!statusResponse.ok) {
+          const errorText = await statusResponse.text()
+          console.error('Status check failed:', errorText)
           throw new Error(`Status check failed: ${statusResponse.statusText}`)
         }
         
         result = await statusResponse.json()
-        console.log(`Polling attempt ${attempts + 1}: ${result.status}`)
+        console.log(`Status: ${result.status}`, result.progress ? `Progress: ${result.progress}%` : '')
         
         if (result.status === 'failed') {
-          throw new Error(`Video generation failed: ${result.error || 'Unknown error'}`)
+          console.error('Generation failed:', result)
+          throw new Error(`Video generation failed: ${result.error || result.message || 'Unknown error'}`)
         }
         
         attempts++
@@ -780,44 +820,98 @@ app.post('/api/video', async (c) => {
       data = result
     }
     
-    // Get video URL from response
-    const videoUrl = data.video?.url || data.video_url || data.url || data.output
+    // Get video URL from response - handle different response formats
+    let videoUrl = null
+    
+    // Check different possible locations for the video URL
+    if (data.video?.url) {
+      videoUrl = data.video.url
+    } else if (data.video_url) {
+      videoUrl = data.video_url
+    } else if (data.url) {
+      videoUrl = data.url
+    } else if (data.output) {
+      videoUrl = data.output
+    } else if (data.outputs && Array.isArray(data.outputs) && data.outputs.length > 0) {
+      videoUrl = data.outputs[0].url || data.outputs[0].video_url || data.outputs[0]
+    } else if (data.result?.video_url) {
+      videoUrl = data.result.video_url
+    } else if (data.result?.url) {
+      videoUrl = data.result.url
+    }
+    
+    console.log('Extracted video URL:', videoUrl)
+    console.log('Full response structure:', JSON.stringify(Object.keys(data), null, 2))
     
     if (!videoUrl) {
-      throw new Error('No video URL in response')
+      console.error('Could not find video URL in response:', JSON.stringify(data, null, 2))
+      throw new Error('No video URL found in response. Check logs for response structure.')
     }
     
     const videoId = crypto.randomUUID()
     const key = `videos/${videoId}.mp4`
     
     // Download and save video
+    console.log('Downloading video from:', videoUrl.substring(0, 100) + '...')
     const videoResponse = await fetch(videoUrl)
+    
+    if (!videoResponse.ok) {
+      throw new Error(`Failed to download video: ${videoResponse.statusText}`)
+    }
+    
+    console.log('Saving video to R2:', key)
     await c.env.R2.put(key, videoResponse.body, {
       httpMetadata: { contentType: 'video/mp4' }
     })
+    console.log('Video saved to R2 successfully')
     
     // Save to database
-    await c.env.DB.prepare(`
-      INSERT INTO videos (id, url, artwork_id, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(
+    console.log('Saving video to database:', {
       videoId,
-      `/files/${key}`,
+      key,
       imageId,
-      JSON.stringify({ 
-        model, 
-        prompt, 
-        enableLoop,
-        duration,
-        fal_url: videoUrl 
-      }),
-      new Date().toISOString()
-    ).run()
+      videoUrl: videoUrl.substring(0, 100) + '...'
+    })
+    
+    try {
+      const dbResult = await c.env.DB.prepare(`
+        INSERT INTO videos (id, url, artwork_id, metadata, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        videoId,
+        `/files/${key}`,
+        imageId,
+        JSON.stringify({ 
+          model, 
+          prompt, 
+          enableLoop,
+          duration,
+          fal_url: videoUrl,
+          status: 'completed'
+        }),
+        new Date().toISOString()
+      ).run()
+      
+      console.log('Database insert result:', dbResult)
+      console.log('Video saved successfully to database')
+    } catch (dbError) {
+      console.error('Database insert error:', dbError)
+      console.error('Error details:', dbError.stack)
+      throw new Error(`Failed to save video to database: ${dbError.message}`)
+    }
+    
+    // Verify the video was saved
+    const verification = await c.env.DB.prepare(
+      'SELECT id FROM videos WHERE id = ?'
+    ).bind(videoId).first()
+    
+    console.log('Video verification:', verification)
     
     return c.json({ 
       success: true, 
       videoId,
-      url: `/files/${key}`
+      url: `/files/${key}`,
+      saved: !!verification
     })
   } catch (error) {
     console.error('Video generation error:', error)
@@ -964,6 +1058,45 @@ app.get('/api/albums', async (c) => {
 app.get('/api/videos', async (c) => {
   const videos = await c.env.DB.prepare('SELECT * FROM videos ORDER BY created_at DESC').all()
   return c.json(videos.results || [])
+})
+
+// Test endpoint for video insertion
+app.post('/api/test-video-insert', async (c) => {
+  const videoId = crypto.randomUUID()
+  try {
+    // Get a valid artwork ID first
+    const artwork = await c.env.DB.prepare('SELECT id FROM artwork LIMIT 1').first()
+    if (!artwork) {
+      return c.json({ 
+        success: false, 
+        error: 'No artwork found. Please generate some artwork first.'
+      }, 400)
+    }
+    
+    const result = await c.env.DB.prepare(`
+      INSERT INTO videos (id, url, artwork_id, metadata, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(
+      videoId,
+      '/files/test-video.mp4',
+      artwork.id,
+      JSON.stringify({ test: true, model: 'test' }),
+      new Date().toISOString()
+    ).run()
+    
+    return c.json({ 
+      success: true, 
+      videoId,
+      artworkId: artwork.id,
+      dbResult: result
+    })
+  } catch (error) {
+    return c.json({ 
+      success: false, 
+      error: error.message,
+      stack: error.stack
+    }, 500)
+  }
 })
 
 // Get distribution-ready albums for desktop app
