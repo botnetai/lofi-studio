@@ -467,10 +467,10 @@ app.post('/api/artwork', async (c) => {
   
   // Map model names to Fal.ai endpoints
   const modelEndpoints = {
-    'flux-schnell': 'https://fal.run/fal-ai/flux/schnell',
-    'flux-dev': 'https://fal.run/fal-ai/flux/dev',
-    'flux-pro': 'https://fal.run/fal-ai/flux-pro',
-    'stable-diffusion-xl': 'https://fal.run/fal-ai/stable-diffusion-xl'
+    'flux-schnell': 'https://queue.fal.run/fal-ai/flux/schnell',
+    'flux-dev': 'https://queue.fal.run/fal-ai/flux/dev',
+    'flux-pro': 'https://queue.fal.run/fal-ai/flux-pro',
+    'stable-diffusion-xl': 'https://queue.fal.run/fal-ai/stable-diffusion-xl'
   }
   
   const endpoint = modelEndpoints[model] || modelEndpoints['flux-schnell']
@@ -491,10 +491,51 @@ app.post('/api/artwork', async (c) => {
     })
     
     if (!response.ok) {
-      throw new Error(`Fal.ai error: ${response.statusText}`)
+      const errorText = await response.text()
+      throw new Error(`Fal.ai error: ${response.statusText}. ${errorText}`)
     }
     
-    const data = await response.json()
+    let data = await response.json()
+    
+    // Handle queue response - if we get a request_id, we need to poll for the result
+    if (data.request_id && data.status_url) {
+      console.log('Got queue response for artwork, polling for result...')
+      
+      // Poll for the result
+      let result = data
+      let attempts = 0
+      const maxAttempts = 60 // 5 minutes with 5 second intervals
+      
+      while (result.status !== 'completed' && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
+        
+        const statusResponse = await fetch(data.status_url, {
+          headers: {
+            'Authorization': `Key ${c.env.FAL_KEY}`
+          }
+        })
+        
+        if (!statusResponse.ok) {
+          throw new Error(`Status check failed: ${statusResponse.statusText}`)
+        }
+        
+        result = await statusResponse.json()
+        console.log(`Artwork polling attempt ${attempts + 1}: ${result.status}`)
+        
+        if (result.status === 'failed') {
+          throw new Error(`Artwork generation failed: ${result.error || 'Unknown error'}`)
+        }
+        
+        attempts++
+      }
+      
+      if (result.status !== 'completed') {
+        throw new Error('Artwork generation timed out')
+      }
+      
+      // Use the completed result
+      data = result
+    }
     const artworkIds = []
     
     // Save generated images
@@ -539,7 +580,7 @@ app.post('/api/video', async (c) => {
   const { 
     imageId, 
     prompt = '', 
-    model = 'kling-1.6', 
+    model = 'kling-2.1', 
     enableLoop = false, 
     duration = 5,
     seed = -1,
@@ -581,10 +622,40 @@ app.post('/api/video', async (c) => {
     
     // Map models to endpoints and configurations
     const modelConfigs = {
+      'kling-2.1': {
+        endpoint: mode === 'pro' 
+          ? 'https://queue.fal.run/fal-ai/kling-video/v2.1/pro/image-to-video'
+          : mode === 'master'
+          ? 'https://queue.fal.run/fal-ai/kling-video/v2.1/master/image-to-video'
+          : 'https://queue.fal.run/fal-ai/kling-video/v2.1/standard/image-to-video',
+        params: {
+          image_url: fullImageUrl,
+          prompt: prompt || 'smooth camera movement, cinematic',
+          duration: duration.toString(),
+          cfg_scale: cfgScale,
+          seed: seed === -1 ? Math.floor(Math.random() * 1000000) : seed,
+          ...(fullTailImageUrl && { tail_image_url: fullTailImageUrl })
+        }
+      },
+      'kling-2.0': {
+        endpoint: mode === 'pro' 
+          ? 'https://queue.fal.run/fal-ai/kling-video/v2/pro/image-to-video'
+          : mode === 'master'
+          ? 'https://queue.fal.run/fal-ai/kling-video/v2/master/image-to-video'
+          : 'https://queue.fal.run/fal-ai/kling-video/v2/standard/image-to-video',
+        params: {
+          image_url: fullImageUrl,
+          prompt: prompt || 'smooth camera movement, cinematic',
+          duration: duration.toString(),
+          cfg_scale: cfgScale,
+          seed: seed === -1 ? Math.floor(Math.random() * 1000000) : seed,
+          ...(fullTailImageUrl && { tail_image_url: fullTailImageUrl })
+        }
+      },
       'kling-1.6': {
         endpoint: mode === 'pro' 
-          ? 'https://fal.run/fal-ai/kling-video/v1.6/pro/image-to-video'
-          : 'https://fal.run/fal-ai/kling-video/v1.6/image-to-video',
+          ? 'https://queue.fal.run/fal-ai/kling-video/v1.6/pro/image-to-video'
+          : 'https://queue.fal.run/fal-ai/kling-video/v1.6/standard/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement, cinematic',
@@ -595,7 +666,17 @@ app.post('/api/video', async (c) => {
         }
       },
       'kling-1.5': {
-        endpoint: 'https://fal.run/fal-ai/kling-video/v1.5/image-to-video',
+        endpoint: 'https://queue.fal.run/fal-ai/kling-video/v1.5/pro/image-to-video',
+        params: {
+          image_url: fullImageUrl,
+          prompt: prompt || 'smooth camera movement',
+          duration: duration.toString(),
+          cfg_scale: cfgScale,
+          seed: seed === -1 ? Math.floor(Math.random() * 1000000) : seed
+        }
+      },
+      'kling-1.0': {
+        endpoint: 'https://queue.fal.run/fal-ai/kling-video/v1/pro/image-to-video',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement',
@@ -605,7 +686,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'stable-video': {
-        endpoint: 'https://fal.run/fal-ai/stable-video-diffusion',
+        endpoint: 'https://queue.fal.run/fal-ai/stable-video-diffusion',
         params: {
           image_url: fullImageUrl,
           motion_bucket_id: 127,
@@ -615,7 +696,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'animatediff-sparsectrl': {
-        endpoint: 'https://fal.run/fal-ai/animatediff-sparsectrl-lcm',
+        endpoint: 'https://queue.fal.run/fal-ai/animatediff-sparsectrl-lcm',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth camera movement, cinematic motion',
@@ -627,7 +708,7 @@ app.post('/api/video', async (c) => {
         }
       },
       'animatediff-lightning': {
-        endpoint: 'https://fal.run/fal-ai/animatediff-v2v',
+        endpoint: 'https://queue.fal.run/fal-ai/animatediff-v2v',
         params: {
           image_url: fullImageUrl,
           prompt: prompt || 'smooth cinematic camera movement',
@@ -658,6 +739,46 @@ app.post('/api/video', async (c) => {
     
     const data = await response.json()
     console.log('Video generation response:', data)
+    
+    // Handle queue response - if we get a request_id, we need to poll for the result
+    if (data.request_id && data.status_url) {
+      console.log('Got queue response, polling for result...')
+      
+      // Poll for the result
+      let result = data
+      let attempts = 0
+      const maxAttempts = 120 // 10 minutes with 5 second intervals
+      
+      while (result.status !== 'completed' && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 5000)) // Wait 5 seconds
+        
+        const statusResponse = await fetch(data.status_url, {
+          headers: {
+            'Authorization': `Key ${c.env.FAL_KEY}`
+          }
+        })
+        
+        if (!statusResponse.ok) {
+          throw new Error(`Status check failed: ${statusResponse.statusText}`)
+        }
+        
+        result = await statusResponse.json()
+        console.log(`Polling attempt ${attempts + 1}: ${result.status}`)
+        
+        if (result.status === 'failed') {
+          throw new Error(`Video generation failed: ${result.error || 'Unknown error'}`)
+        }
+        
+        attempts++
+      }
+      
+      if (result.status !== 'completed') {
+        throw new Error('Video generation timed out')
+      }
+      
+      // Use the completed result
+      data = result
+    }
     
     // Get video URL from response
     const videoUrl = data.video?.url || data.video_url || data.url || data.output
