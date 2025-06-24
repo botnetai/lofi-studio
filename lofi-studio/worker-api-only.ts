@@ -601,6 +601,63 @@ app.post('/api/video', async (c) => {
       return c.json({ error: 'Artwork not found' }, 404)
     }
     
+    // Create video placeholder immediately with 'generating' status
+    const videoId = crypto.randomUUID()
+    const timestamp = new Date().toISOString()
+    
+    // Save placeholder to database
+    await c.env.DB.prepare(`
+      INSERT INTO videos (id, url, artwork_id, metadata, created_at, status)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      videoId,
+      '', // Empty URL for now
+      imageId,
+      JSON.stringify({ 
+        model, 
+        prompt, 
+        enableLoop,
+        duration,
+        mode,
+        status: 'generating',
+        startedAt: timestamp
+      }),
+      timestamp,
+      'generating' // Add status field
+    ).run()
+    
+    console.log('Created video placeholder with ID:', videoId)
+    
+    // Start async video generation
+    c.executionCtx.waitUntil(
+      generateVideoAsync(c, videoId, artwork, {
+        imageId, prompt, model, enableLoop, duration, seed, cfgScale, mode, tailImageId
+      })
+    )
+    
+    // Return immediately with the video ID
+    return c.json({ 
+      success: true, 
+      videoId,
+      status: 'generating',
+      message: 'Video generation started. Check back in 1-2 minutes.'
+    })
+  } catch (error) {
+    console.error('Video generation error:', error)
+    return c.json({ error: error.message }, 500)
+  }
+})
+
+// Async video generation function
+async function generateVideoAsync(
+  c: any,
+  videoId: string,
+  artwork: any,
+  params: any
+) {
+  const { imageId, prompt, model, enableLoop, duration, seed, cfgScale, mode, tailImageId } = params
+  
+  try {
     // Get full URL for the artwork
     const origin = c.req.header('origin') || `https://${c.req.header('host')}`
     const fullImageUrl = artwork.url.startsWith('http') ? artwork.url : `${origin}${artwork.url}`
@@ -865,59 +922,71 @@ app.post('/api/video', async (c) => {
     })
     console.log('Video saved to R2 successfully')
     
-    // Save to database
-    console.log('Saving video to database:', {
+    // Update database with completed video
+    console.log('Updating video in database:', {
       videoId,
       key,
-      imageId,
       videoUrl: videoUrl.substring(0, 100) + '...'
     })
     
     try {
       const dbResult = await c.env.DB.prepare(`
-        INSERT INTO videos (id, url, artwork_id, metadata, created_at)
-        VALUES (?, ?, ?, ?, ?)
+        UPDATE videos
+        SET url = ?, metadata = ?, status = ?
+        WHERE id = ?
       `).bind(
-        videoId,
         `/files/${key}`,
-        imageId,
         JSON.stringify({ 
           model, 
           prompt, 
           enableLoop,
           duration,
+          mode,
           fal_url: videoUrl,
-          status: 'completed'
+          status: 'completed',
+          completedAt: new Date().toISOString()
         }),
-        new Date().toISOString()
+        'completed',
+        videoId
       ).run()
       
-      console.log('Database insert result:', dbResult)
-      console.log('Video saved successfully to database')
+      console.log('Database update result:', dbResult)
+      console.log('Video updated successfully in database')
     } catch (dbError) {
-      console.error('Database insert error:', dbError)
+      console.error('Database update error:', dbError)
       console.error('Error details:', dbError.stack)
-      throw new Error(`Failed to save video to database: ${dbError.message}`)
+      
+      // Update status to failed
+      await c.env.DB.prepare(`
+        UPDATE videos
+        SET status = ?, metadata = json_set(metadata, '$.error', ?)
+        WHERE id = ?
+      `).bind(
+        'failed',
+        dbError.message,
+        videoId
+      ).run()
     }
-    
-    // Verify the video was saved
-    const verification = await c.env.DB.prepare(
-      'SELECT id FROM videos WHERE id = ?'
-    ).bind(videoId).first()
-    
-    console.log('Video verification:', verification)
-    
-    return c.json({ 
-      success: true, 
-      videoId,
-      url: `/files/${key}`,
-      saved: !!verification
-    })
   } catch (error) {
     console.error('Video generation error:', error)
-    return c.json({ error: error.message }, 500)
+    
+    // Update video status to failed
+    try {
+      await c.env.DB.prepare(`
+        UPDATE videos
+        SET status = ?, metadata = json_set(metadata, '$.error', ?, '$.failedAt', ?)
+        WHERE id = ?
+      `).bind(
+        'failed',
+        error.message,
+        new Date().toISOString(),
+        videoId
+      ).run()
+    } catch (updateError) {
+      console.error('Failed to update video status:', updateError)
+    }
   }
-})
+}
 
 // Create album/compilation
 app.post('/api/albums', async (c) => {
@@ -1056,8 +1125,25 @@ app.get('/api/albums', async (c) => {
 
 // Get all videos
 app.get('/api/videos', async (c) => {
-  const videos = await c.env.DB.prepare('SELECT * FROM videos ORDER BY created_at DESC').all()
-  return c.json(videos.results || [])
+  const videos = await c.env.DB.prepare(`
+    SELECT v.*, a.prompt as artwork_prompt 
+    FROM videos v
+    LEFT JOIN artwork a ON v.artwork_id = a.id
+    ORDER BY v.created_at DESC
+  `).all()
+  
+  // Parse metadata and add prompt from artwork if video prompt is empty
+  const processedVideos = (videos.results || []).map(video => {
+    const metadata = JSON.parse(video.metadata || '{}')
+    return {
+      ...video,
+      prompt: metadata.prompt || video.artwork_prompt || 'No prompt',
+      metadata: video.metadata,
+      status: video.status || 'completed' // Default to completed for old videos
+    }
+  })
+  
+  return c.json(processedVideos)
 })
 
 // Test endpoint for video insertion

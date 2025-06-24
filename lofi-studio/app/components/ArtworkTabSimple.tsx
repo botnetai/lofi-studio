@@ -19,6 +19,7 @@ interface Video {
   prompt: string
   metadata: string
   created_at: string
+  status?: 'generating' | 'completed' | 'failed'
 }
 
 export function ArtworkTabSimple() {
@@ -167,9 +168,12 @@ export function ArtworkTabSimple() {
         throw new Error(data.error || 'Failed to generate video')
       }
       
-      setSuccess('Video generation started!')
+      setSuccess('Video generation started! Your video will appear in the Media Library in 1-2 minutes.')
       setVideoPrompt('') // Clear prompt after success
-      fetchVideos() // Refresh video list
+      setSelectedImageForVideo(null) // Clear selection
+      
+      // Immediately refresh to show the new placeholder
+      setTimeout(() => fetchVideos(), 500)
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -485,37 +489,76 @@ export function ArtworkTabSimple() {
         )}
         
         {/* Videos Section */}
-        {mediaFilter !== 'images' && videos.length > 0 && (
+        {mediaFilter !== 'images' && (
           <>
-            {mediaFilter === 'all' && <h3 className="text-lg font-semibold mb-4 text-gray-300">Videos</h3>}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map((video) => {
+            {videos.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <Loader2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p>No videos yet. Select an image and generate your first video!</p>
+              </div>
+            ) : (
+              <>
+                {mediaFilter === 'all' && <h3 className="text-lg font-semibold mb-4 text-gray-300">Videos</h3>}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videos.map((video) => {
                 const metadata = JSON.parse(video.metadata || '{}')
+                const status = video.status || 'completed'
+                const isGenerating = status === 'generating'
+                const isFailed = status === 'failed'
                 
                 return (
                   <div key={video.id} className="bg-gray-800 rounded-lg overflow-hidden">
-                    <video
-                      controls
-                      loop={metadata.enableLoop}
-                      className="w-full aspect-video bg-black"
-                    >
-                      <source src={video.url} type="video/mp4" />
-                    </video>
+                    {isGenerating ? (
+                      <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center">
+                        <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+                        <p className="text-sm text-gray-400">Generating video...</p>
+                        <p className="text-xs text-gray-500 mt-2">This may take 1-2 minutes</p>
+                      </div>
+                    ) : isFailed ? (
+                      <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center">
+                        <X className="w-12 h-12 text-red-500 mb-4" />
+                        <p className="text-sm text-red-400">Video generation failed</p>
+                        <p className="text-xs text-gray-500 mt-2">{metadata.error || 'Unknown error'}</p>
+                      </div>
+                    ) : (
+                      <video
+                        controls
+                        loop={metadata.enableLoop}
+                        className="w-full aspect-video bg-black"
+                      >
+                        <source src={video.url} type="video/mp4" />
+                      </video>
+                    )}
                     <div className="p-4">
-                      <div className="text-sm font-medium mb-1">
-                        {metadata.model || 'Unknown model'}
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-sm font-medium">
+                          {metadata.model || 'Unknown model'}
+                        </div>
+                        {isGenerating && (
+                          <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded">
+                            Generating
+                          </span>
+                        )}
+                        {isFailed && (
+                          <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">
+                            Failed
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-gray-400 line-clamp-2">
                         {video.prompt || 'No prompt'}
                       </div>
                       <div className="text-xs text-gray-500 mt-2">
-                        Duration: {metadata.duration}s • {new Date(video.created_at).toLocaleDateString()}
+                        {!isGenerating && metadata.duration && `Duration: ${metadata.duration}s • `}
+                        {new Date(video.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
                 )
               })}
-            </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </Card>
