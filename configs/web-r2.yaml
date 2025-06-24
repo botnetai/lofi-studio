@@ -1,0 +1,7 @@
+debug: true
+db-type: sqlite
+db-conn: ../data/musikai.db
+fs-type: s3
+fs-conn: YOUR_R2_ACCESS_KEY_ID:YOUR_R2_SECRET_ACCESS_KEY:auto:lofi-studio-storage
+proxy: ""
+addr: :8080

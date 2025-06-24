@@ -1,0 +1,25 @@
+name = "lofi-studio"
+main = "worker-api-only.ts"
+compatibility_date = "2024-12-18"
+account_id = "599cb66ab5c235bb62eb59dc77ed2f42"
+
+[site]
+bucket = "./dist"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "lofi-studio-storage"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lofi-studio-db"
+database_id = "8c943f5b-305d-4658-9212-83d587bc6670"
+
+[ai]
+binding = "AI"
+
+[vars]
+GOAPI_KEY = "c3ba91c7503bb8b8d3c4e6f41292af00e910a8e1067b6d20c4a2661017c9e7da"
+UDIOAPI_KEY = "51bdc9d9-ba8f-45fa-a34c-d7d8aadc9a6a"
+FAL_KEY = "f5d1c93d-5364-4117-96f8-a33699e70eb0:4953396aac7b5bd14673003cea767c28"
+JSON2VIDEO_KEY = "flk5dNvAxZ3yDgYjjYANblxNBdRmYltDeXQ9DxkE"

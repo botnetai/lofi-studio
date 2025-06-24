@@ -1,0 +1,47 @@
+{
+  "name": "lofi-studio",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vinxi dev",
+    "dev:standalone": "vite",
+    "build": "vinxi build",
+    "build:standalone": "vite build",
+    "preview:standalone": "vite preview",
+    "start": "vinxi start",
+    "preview": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@base-ui-components/react": "1.0.0-alpha.8",
+    "@cloudflare/kv-asset-handler": "^0.4.0",
+    "@tanstack/react-router": "^1.121.34",
+    "@tanstack/router-generator": "^1.121.34",
+    "@tanstack/start": "^1.120.20",
+    "@tanstack/start-config": "^1.120.20",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "hono": "^4.7.1",
+    "lucide-react": "^0.469.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.3.1",
+    "vinxi": "^0.5.7",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@tanstack/router-vite-plugin": "^1.121.34",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.6.0",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.5",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.6",
+    "wrangler": "^3.101.0"
+  }
+}

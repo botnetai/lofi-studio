@@ -1,0 +1,7 @@
+debug: true
+db-type: sqlite
+db-conn: ../data/musikai.db
+fs-type: local
+fs-conn: ../data/files/
+proxy: ""
+addr: :8080

@@ -1,0 +1,21 @@
+{
+  "name": "lofi-music-studio",
+  "version": "1.0.0",
+  "description": "Web UI for creating and publishing lofi music",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.6.9",
+    "googleapis": "^118.0.0",
+    "form-data": "^4.0.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

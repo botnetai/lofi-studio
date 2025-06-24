@@ -1,0 +1,12 @@
+debug: true
+db-type: sqlite
+db-conn: ../data/musikai.db
+fs-type: local
+fs-conn: ../data/files/
+proxy: ""
+timeout: 30m
+concurrency: 2
+wait-min: 1s
+wait-max: 5s
+limit: 50
+auto: true
