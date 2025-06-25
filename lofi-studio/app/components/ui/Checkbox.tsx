@@ -22,8 +22,8 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
           'h-4 w-4 rounded border border-gray-600 bg-transparent',
           'transition-all duration-200',
           'hover:border-gray-500',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900',
-          'data-[checked]:bg-purple-600 data-[checked]:border-purple-600',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900',
+          'data-[checked]:bg-blue-600 data-[checked]:border-blue-600',
           'disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}

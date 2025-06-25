@@ -70,7 +70,7 @@ function Header({ activeTab, onTabChange }: { activeTab: string; onTabChange: (t
   ]
   
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-800 bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-gray-950/60">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white backdrop-blur supports-[backdrop-filter]:bg-white/95">
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
           <a 
@@ -81,7 +81,7 @@ function Header({ activeTab, onTabChange }: { activeTab: string; onTabChange: (t
               onTabChange('music')
             }}
           >
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
               Lofi Studio
             </span>
           </a>
@@ -91,7 +91,7 @@ function Header({ activeTab, onTabChange }: { activeTab: string; onTabChange: (t
               <Tabs.Trigger
                 key={item.id}
                 value={item.id}
-                className="relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-gray-800/50 data-[selected]:bg-gray-800 data-[selected]:text-white"
+                className="relative px-4 py-2 rounded-lg text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 data-[selected]:bg-blue-50 data-[selected]:text-blue-700 data-[selected]:font-semibold"
               >
                 <span className="flex items-center gap-2">
                   <span>{item.icon}</span>

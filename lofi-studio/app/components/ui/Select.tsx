@@ -29,8 +29,8 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             'w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100',
             'flex items-center justify-between gap-2',
             'hover:border-gray-300 dark:hover:border-gray-600 transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-transparent',
-            'data-[popup-open]:ring-2 data-[popup-open]:ring-purple-500 data-[popup-open]:border-transparent',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-transparent',
+            'data-[popup-open]:ring-2 data-[popup-open]:ring-blue-500 data-[popup-open]:border-transparent',
             className
           )}
         >
@@ -57,9 +57,9 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
                   className={cn(
                     'px-4 py-3 text-gray-700 dark:text-gray-100 cursor-pointer transition-all relative',
                     'hover:bg-gray-50 dark:hover:bg-gray-800 hover:pl-5',
-                    'data-[selected]:bg-purple-50 dark:data-[selected]:bg-purple-900/20',
-                    'data-[selected]:border-l-2 data-[selected]:border-purple-500 data-[selected]:pl-5',
-                    'data-[selected]:text-purple-900 dark:data-[selected]:text-purple-100',
+                    'data-[selected]:bg-blue-50 dark:data-[selected]:bg-blue-900/20',
+                    'data-[selected]:border-l-2 data-[selected]:border-blue-500 data-[selected]:pl-5',
+                    'data-[selected]:text-blue-900 dark:data-[selected]:text-blue-100',
                     'focus-visible:outline-none focus-visible:bg-gray-50 dark:focus-visible:bg-gray-800'
                   )}
                 >
@@ -67,7 +67,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
                     <div className="font-medium flex items-center justify-between">
                       <span>{option.label}</span>
                       {value === option.value && (
-                        <span className="text-purple-400 ml-2">✓</span>
+                        <span className="text-blue-400 ml-2">✓</span>
                       )}
                     </div>
                     {option.description && (

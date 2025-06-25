@@ -333,59 +333,66 @@ export function ArtworkTabSimple() {
           
           <div className="space-y-4">
             <div>
+              <Label>Generation Mode</Label>
+              <div className="flex gap-2 mt-1">
+                <Button
+                  variant={imageMode === 'text-to-image' ? 'secondary' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setImageMode('text-to-image')
+                    setSelectedImageForArtwork(null)
+                  }}
+                  className={cn(
+                    "flex-1",
+                    imageMode === 'text-to-image' && "ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900"
+                  )}
+                >
+                  Text to Image
+                </Button>
+                <Button
+                  variant={imageMode === 'image-to-image' ? 'secondary' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setImageMode('image-to-image')
+                    // Set to flux-kontext if current model doesn't support image-to-image
+                    const currentConfig = IMAGE_MODEL_CONFIGS[artworkModel as keyof typeof IMAGE_MODEL_CONFIGS]
+                    if (!currentConfig.supportsImageInput) {
+                      setArtworkModel('flux-kontext')
+                    }
+                  }}
+                  className={cn(
+                    "flex-1",
+                    imageMode === 'image-to-image' && "ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900"
+                  )}
+                >
+                  Image to Image
+                </Button>
+              </div>
+            </div>
+            
+            <div>
               <Label htmlFor="artworkModel">AI Model</Label>
               <Select
                 value={artworkModel}
                 onValueChange={(value) => {
                   setArtworkModel(value)
-                  const config = IMAGE_MODEL_CONFIGS[value as keyof typeof IMAGE_MODEL_CONFIGS]
-                  // Reset to text-to-image if new model doesn't support image-to-image
-                  if (!config.supportsImageInput && imageMode === 'image-to-image') {
-                    setImageMode('text-to-image')
-                    setSelectedImageForArtwork(null)
-                  }
                 }}
-                options={Object.entries(IMAGE_MODEL_CONFIGS).map(([key, config]) => ({
-                  value: key,
-                  label: `${config.name} ${config.version}`,
-                  description: config.description
-                }))}
+                options={Object.entries(IMAGE_MODEL_CONFIGS)
+                  .filter(([key, config]) => {
+                    // Filter models based on selected mode
+                    if (imageMode === 'image-to-image') {
+                      return config.supportsImageInput
+                    }
+                    return true // All models support text-to-image
+                  })
+                  .map(([key, config]) => ({
+                    value: key,
+                    label: `${config.name} ${config.version}`,
+                    description: config.description
+                  }))}
                 className="w-full mt-1"
               />
             </div>
-            
-            {currentImageModelConfig.supportsImageInput && (
-              <div>
-                <Label>Generation Mode</Label>
-                <div className="flex gap-2 mt-1">
-                  <Button
-                    variant={imageMode === 'text-to-image' ? 'secondary' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setImageMode('text-to-image')
-                      setSelectedImageForArtwork(null)
-                    }}
-                    className={cn(
-                      "flex-1",
-                      imageMode === 'text-to-image' && "ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-900"
-                    )}
-                  >
-                    Text to Image
-                  </Button>
-                  <Button
-                    variant={imageMode === 'image-to-image' ? 'secondary' : 'outline'}
-                    size="sm"
-                    onClick={() => setImageMode('image-to-image')}
-                    className={cn(
-                      "flex-1",
-                      imageMode === 'image-to-image' && "ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-900"
-                    )}
-                  >
-                    Image to Image
-                  </Button>
-                </div>
-              </div>
-            )}
             
             {imageMode === 'image-to-image' && (
               <div>
