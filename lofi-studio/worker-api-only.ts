@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { getAssetFromKV } from '@cloudflare/kv-asset-handler'
+import { imageModelSchemas, videoModelSchemas, musicModelSchemas } from './app/config/model-schemas'
 
 // @ts-ignore
 import manifestJSON from '__STATIC_CONTENT_MANIFEST'
@@ -32,6 +33,55 @@ app.use('*', cors({
 app.get('/api/songs', async (c) => {
   const songs = await c.env.DB.prepare('SELECT * FROM songs ORDER BY created_at DESC').all()
   return c.json(songs.results || [])
+})
+
+// Model schemas endpoint
+app.get('/api/model-schemas', async (c) => {
+  const modelType = c.req.query('type')
+  const modelId = c.req.query('id')
+  
+  // Return all schemas for a type
+  if (modelType && !modelId) {
+    switch (modelType) {
+      case 'image':
+        return c.json(imageModelSchemas)
+      case 'video':
+        return c.json(videoModelSchemas)
+      case 'music':
+        return c.json(musicModelSchemas)
+      default:
+        return c.json({ error: 'Invalid model type' }, 400)
+    }
+  }
+  
+  // Return specific schema
+  if (modelType && modelId) {
+    let schema = null
+    switch (modelType) {
+      case 'image':
+        schema = imageModelSchemas[modelId]
+        break
+      case 'video':
+        schema = videoModelSchemas[modelId]
+        break
+      case 'music':
+        schema = musicModelSchemas[modelId]
+        break
+    }
+    
+    if (schema) {
+      return c.json(schema)
+    } else {
+      return c.json({ error: 'Model not found' }, 404)
+    }
+  }
+  
+  // Return all schemas
+  return c.json({
+    image: imageModelSchemas,
+    video: videoModelSchemas,
+    music: musicModelSchemas
+  })
 })
 
 app.post('/api/generate-music', async (c) => {
