@@ -26,9 +26,9 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
         <BaseSelect.Trigger
           ref={ref}
           className={cn(
-            'w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100',
+            'w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-gray-900 dark:text-gray-100',
             'flex items-center justify-between gap-2',
-            'hover:bg-gray-750 hover:border-gray-600 transition-colors',
+            'hover:border-gray-300 dark:hover:border-gray-600 transition-colors',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-transparent',
             'data-[popup-open]:ring-2 data-[popup-open]:ring-purple-500 data-[popup-open]:border-transparent',
             className
@@ -37,7 +37,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <BaseSelect.Value placeholder={placeholder} className="truncate" />
             {selectedOption?.description && (
-              <span className="text-xs text-gray-400 truncate">
+              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
                 {selectedOption.description}
               </span>
             )}
@@ -49,17 +49,18 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
         
         <BaseSelect.Portal>
           <BaseSelect.Positioner>
-            <BaseSelect.Popup className="z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl py-1 mt-1 max-h-72 overflow-auto backdrop-blur-xl">
+            <BaseSelect.Popup className="z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 mt-1 max-h-72 overflow-auto">
               {options.map((option) => (
                 <BaseSelect.Item
                   key={option.value}
                   value={option.value}
                   className={cn(
-                    'px-4 py-3 text-gray-100 cursor-pointer transition-all relative',
-                    'hover:bg-gray-800 hover:pl-5',
-                    'data-[selected]:bg-gradient-to-r data-[selected]:from-purple-600/20 data-[selected]:to-purple-700/20',
+                    'px-4 py-3 text-gray-700 dark:text-gray-100 cursor-pointer transition-all relative',
+                    'hover:bg-gray-50 dark:hover:bg-gray-800 hover:pl-5',
+                    'data-[selected]:bg-purple-50 dark:data-[selected]:bg-purple-900/20',
                     'data-[selected]:border-l-2 data-[selected]:border-purple-500 data-[selected]:pl-5',
-                    'focus-visible:outline-none focus-visible:bg-gray-800'
+                    'data-[selected]:text-purple-900 dark:data-[selected]:text-purple-100',
+                    'focus-visible:outline-none focus-visible:bg-gray-50 dark:focus-visible:bg-gray-800'
                   )}
                 >
                   <div>
@@ -70,7 +71,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
                       )}
                     </div>
                     {option.description && (
-                      <div className="text-xs text-gray-500 mt-0.5 data-[selected]:text-gray-400">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {option.description}
                       </div>
                     )}
