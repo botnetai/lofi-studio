@@ -19,7 +19,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
         onCheckedChange={onCheckedChange}
         disabled={disabled}
         className={cn(
-          'h-4 w-4 rounded border border-gray-600 bg-gray-800',
+          'h-4 w-4 rounded border border-gray-600 bg-transparent',
           'transition-all duration-200',
           'hover:border-gray-500',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900',
@@ -29,7 +29,10 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
         )}
         {...props}
       >
-        <BaseCheckbox.Indicator className="flex items-center justify-center text-white">
+        <BaseCheckbox.Indicator 
+          className="flex items-center justify-center text-white"
+          keepMounted={false}
+        >
           <Check className="h-3 w-3" />
         </BaseCheckbox.Indicator>
       </BaseCheckbox.Root>
