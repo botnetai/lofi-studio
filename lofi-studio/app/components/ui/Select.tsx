@@ -51,7 +51,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
           <BaseSelect.Positioner>
             <BaseSelect.Popup className="z-50 bg-gray-900 border border-gray-700 rounded-lg shadow-2xl py-1 mt-1 max-h-72 overflow-auto backdrop-blur-xl">
               {options.map((option) => (
-                <BaseSelect.Option
+                <BaseSelect.Item
                   key={option.value}
                   value={option.value}
                   className={cn(
@@ -75,7 +75,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
                       </div>
                     )}
                   </div>
-                </BaseSelect.Option>
+                </BaseSelect.Item>
               ))}
             </BaseSelect.Popup>
           </BaseSelect.Positioner>

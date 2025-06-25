@@ -1,4 +1,3 @@
-import { useButton } from '@base-ui-components/react'
 import { forwardRef } from 'react'
 import { cn } from '../../lib/utils'
 
@@ -8,15 +7,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'md', disabled, ...props }, ref) => {
-    const { getRootProps } = useButton({
-      disabled,
-      rootRef: ref
-    })
-    
+  ({ className, variant = 'default', size = 'md', ...props }, ref) => {
     return (
       <button
-        {...getRootProps()}
+        ref={ref}
         {...props}
         className={cn(
           // Base styles

@@ -9,6 +9,11 @@ import { CompileTab } from './components/CompileTab'
 // Import Base UI components
 import { Tabs } from './components/ui/Tabs'
 import { Button } from './components/ui/Button'
+import { Select } from './components/ui/Select'
+import { Checkbox } from './components/ui/Checkbox'
+import { Input } from './components/ui/Input'
+import { Textarea } from './components/ui/Textarea'
+import { Label } from './components/ui/Label'
 
 // Theme Provider implementation
 type Theme = "dark" | "light" | "system"
@@ -232,44 +237,42 @@ function GenerateMusic() {
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <Label>
               Music Prompt
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Describe the lofi beat you want..."
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={isGenerating}
             />
           </div>
           
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">
+            <Label>
               AI Model (optional)
-            </label>
-            <select
+            </Label>
+            <Select
               value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              onValueChange={setModel}
               disabled={isGenerating}
-            >
-              <option value="">Latest (default)</option>
-              <option value="chirp-v3-5">chirp-v3-5</option>
-              <option value="chirp-v3-0">chirp-v3-0</option>
-              <option value="chirp-v2-xxl-alpha">chirp-v2-xxl-alpha</option>
-            </select>
+              options={[
+                { value: '', label: 'Latest (default)', description: 'Automatically uses the newest model' },
+                { value: 'chirp-v3-5', label: 'Chirp v3.5', description: 'Latest model with best quality' },
+                { value: 'chirp-v3-0', label: 'Chirp v3.0', description: 'Stable model with good results' },
+                { value: 'chirp-v2-xxl-alpha', label: 'Chirp v2 XXL Alpha', description: 'Experimental model' }
+              ]}
+              className="w-full"
+            />
           </div>
         </div>
         
         <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
+          <Checkbox
             id="custom-mode"
             checked={customMode}
-            onChange={(e) => setCustomMode(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300"
+            onCheckedChange={setCustomMode}
             disabled={isGenerating}
           />
           <label htmlFor="custom-mode" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -281,67 +284,63 @@ function GenerateMusic() {
           <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
+                <Label>
                   Title (optional)
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Custom track title..."
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   disabled={isGenerating}
                 />
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">
+                <Label>
                   Tags (optional)
-                </label>
-                <input
+                </Label>
+                <Input
                   type="text"
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   placeholder="lofi, chill, study..."
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   disabled={isGenerating}
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">
+              <Label>
                 Lyrics (optional)
-              </label>
-              <textarea
+              </Label>
+              <Textarea
                 value={lyrics}
                 onChange={(e) => setLyrics(e.target.value)}
                 placeholder="Enter your lyrics here..."
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[80px]"
                 disabled={isGenerating}
               />
             </div>
             
             <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="make-instrumental"
                 checked={makeInstrumental}
-                onChange={(e) => setMakeInstrumental(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300"
+                onCheckedChange={setMakeInstrumental}
                 disabled={isGenerating}
               />
-              <label htmlFor="make-instrumental" className="text-sm font-medium leading-none">
+              <Label htmlFor="make-instrumental" className="cursor-pointer">
                 Make instrumental (no vocals)
-              </label>
+              </Label>
             </div>
           </div>
         )}
         
-        <button
+        <Button
           onClick={handleGenerate}
           disabled={isGenerating || !prompt.trim()}
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          variant="primary"
         >
           <span className="flex items-center gap-2">
             {isGenerating ? (
@@ -356,7 +355,7 @@ function GenerateMusic() {
               </>
             )}
           </span>
-        </button>
+        </Button>
         
         {status && (
           <div className="text-sm text-muted-foreground">
@@ -455,12 +454,13 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
               <p className="text-sm text-muted-foreground">Your generated lofi tracks</p>
             </div>
             {generatingCount > 0 && (
-              <button
+              <Button
                 onClick={handleRefreshStuck}
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+                variant="outline"
+                size="sm"
               >
                 🔄 Refresh Stuck Songs
-              </button>
+              </Button>
             )}
           </div>
           
@@ -474,13 +474,14 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
         {selectedSongs.length > 0 && (
           <div className="flex items-center gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
             <span className="text-sm">{selectedSongs.length} selected</span>
-            <button
+            <Button
               onClick={() => onNavigateToCompile(selectedSongs)}
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3"
+              variant="primary"
+              size="sm"
             >
               Create Album
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={async () => {
                 const selectedCompletedSongs = songs.filter(s => selectedSongs.includes(s.id) && s.status === 'completed')
                 for (const song of selectedCompletedSongs) {
@@ -494,11 +495,13 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
                   }
                 }
               }}
-              className="text-sm text-primary hover:underline"
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:underline"
             >
               Download Selected
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={async () => {
                 if (confirm(`Delete ${selectedSongs.length} songs?`)) {
                   for (const id of selectedSongs) {
@@ -507,10 +510,12 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
                   setSelectedSongs([])
                 }
               }}
-              className="text-sm text-red-600 hover:underline"
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:text-red-700 hover:underline"
             >
               Delete Selected
-            </button>
+            </Button>
           </div>
         )}
         
@@ -525,10 +530,9 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
               <thead className="text-xs uppercase bg-muted/50">
                 <tr>
                   <th className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                    <Checkbox
+                      onCheckedChange={(checked) => {
+                        if (checked) {
                           setSelectedSongs(songs.map(s => s.id))
                         } else {
                           setSelectedSongs([])
@@ -550,10 +554,9 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
                   return (
                     <tr key={song.id} className="border-b hover:bg-muted/50">
                       <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={selectedSongs.includes(song.id)}
-                          onChange={() => toggleSelection(song.id)}
+                          onCheckedChange={() => toggleSelection(song.id)}
                         />
                       </td>
                       <td className="px-4 py-3 font-medium">
@@ -592,18 +595,24 @@ function MusicLibrary({ onNavigateToCompile }: { onNavigateToCompile: (selectedS
                               <a
                                 href={song.url || metadata.audio_url}
                                 download={`${song.name || metadata.title || 'lofi-track'}.mp3`}
-                                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
                               >
-                                Download
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                >
+                                  Download
+                                </Button>
                               </a>
                             </>
                           )}
-                          <button
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => handleDelete(song.id)}
                           >
                             🗑️
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
