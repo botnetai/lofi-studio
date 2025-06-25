@@ -9,7 +9,7 @@ import { CompileTab } from './components/CompileTab'
 // Import Base UI components
 import { Tabs } from './components/ui/Tabs'
 import { Button } from './components/ui/Button'
-import { Select } from './components/ui/Select'
+import { Dropdown } from './components/ui/Dropdown'
 import { Checkbox } from './components/ui/Checkbox'
 import { Input } from './components/ui/Input'
 import { Textarea } from './components/ui/Textarea'
@@ -234,7 +234,7 @@ function GenerateMusic() {
             <Label>
               AI Model (optional)
             </Label>
-            <Select
+            <Dropdown
               value={model}
               onValueChange={setModel}
               disabled={isGenerating}

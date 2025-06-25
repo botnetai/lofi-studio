@@ -4,7 +4,7 @@ import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { Textarea } from './ui/Textarea'
 import { Label } from './ui/Label'
-import { Select } from './ui/Select'
+import { Dropdown } from './ui/Dropdown'
 import { Checkbox } from './ui/Checkbox'
 import { cn } from '../lib/utils'
 
@@ -334,7 +334,7 @@ export function ArtworkTabSimple() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="artworkModel">AI Model</Label>
-              <Select
+              <Dropdown
                 value={artworkModel}
                 onValueChange={(value) => {
                   setArtworkModel(value)
@@ -436,7 +436,7 @@ export function ArtworkTabSimple() {
             
             <div>
               <Label htmlFor="numImages">Number of Images</Label>
-              <Select
+              <Dropdown
                 value={numImages.toString()}
                 onValueChange={(value) => setNumImages(Number(value))}
                 options={[
@@ -487,7 +487,7 @@ export function ArtworkTabSimple() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="videoModel">Video Model</Label>
-              <Select
+              <Dropdown
                 value={videoModel}
                 onValueChange={(newModel) => {
                   setVideoModel(newModel)
@@ -513,7 +513,7 @@ export function ArtworkTabSimple() {
             {currentVideoModelConfig.modes.length > 1 && (
               <div>
                 <Label htmlFor="videoMode">Mode</Label>
-                <Select
+                <Dropdown
                   value={videoMode}
                   onValueChange={setVideoMode}
                   options={[
@@ -528,7 +528,7 @@ export function ArtworkTabSimple() {
             
             <div>
               <Label htmlFor="videoDuration">Duration (seconds)</Label>
-              <Select
+              <Dropdown
                 value={videoDuration.toString()}
                 onValueChange={(value) => setVideoDuration(Number(value))}
                 options={currentVideoModelConfig.durations.map(duration => ({

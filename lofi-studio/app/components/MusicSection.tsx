@@ -5,7 +5,7 @@ import { uploadToR2, generateMusic } from '~/lib/api'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { TrackList } from './TrackList'
-import { Select } from './ui/Select'
+import { Dropdown } from './ui/Dropdown'
 import { Textarea } from './ui/Textarea'
 import { Input } from './ui/Input'
 
@@ -113,7 +113,7 @@ export function MusicSection() {
         </div>
       ) : (
         <div className="space-y-4">
-          <Select
+          <Dropdown
             value={service}
             onValueChange={setService}
             options={[
