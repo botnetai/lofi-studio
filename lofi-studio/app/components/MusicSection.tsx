@@ -8,6 +8,7 @@ import { TrackList } from './TrackList'
 import { Select } from './ui/Select'
 import { Textarea } from './ui/Textarea'
 import { Input } from './ui/Input'
+import { Label } from './ui/Label'
 
 export function MusicSection() {
   const [activeTab, setActiveTab] = useState<'upload' | 'generate'>('upload')
@@ -113,15 +114,18 @@ export function MusicSection() {
         </div>
       ) : (
         <div className="space-y-4">
-          <Select
-            value={service}
-            onValueChange={setService}
-            options={[
-              { value: 'goapi', label: 'GoAPI (Udio)' },
-              { value: 'udioapi', label: 'UdioAPI.pro' }
-            ]}
-            className="w-full"
-          />
+          <div>
+            <Label htmlFor="service">AI Model</Label>
+            <Select
+              value={service}
+              onValueChange={setService}
+              options={[
+                { value: 'goapi', label: 'GoAPI (Udio)', description: 'High-quality music generation with Udio engine' },
+                { value: 'udioapi', label: 'UdioAPI.pro', description: 'Alternative API for music generation' }
+              ]}
+              className="w-full mt-1"
+            />
+          </div>
           
           <Textarea
             value={prompt}
