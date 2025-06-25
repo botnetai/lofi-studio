@@ -478,6 +478,7 @@ app.post('/api/artwork', async (c) => {
     'flux-schnell': 'https://fal.run/fal-ai/flux/schnell',
     'flux-dev': 'https://fal.run/fal-ai/flux/dev',
     'flux-pro': 'https://fal.run/fal-ai/flux-pro',
+    'flux-pro-ultra': 'https://fal.run/fal-ai/flux-pro-ultra',
     'stable-diffusion-xl': 'https://fal.run/fal-ai/stable-diffusion-xl'
   }
   

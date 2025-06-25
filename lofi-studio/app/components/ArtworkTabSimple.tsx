@@ -6,6 +6,7 @@ import { Textarea } from './ui/Textarea'
 import { Label } from './ui/Label'
 import { Select } from './ui/Select'
 import { Checkbox } from './ui/Checkbox'
+import { cn } from '../lib/utils'
 
 interface Artwork {
   id: string
@@ -51,7 +52,14 @@ const IMAGE_MODEL_CONFIGS = {
     name: 'FLUX Pro',
     version: '1.1',
     modes: ['text-to-image'],
-    description: 'Highest quality, slower generation',
+    description: 'Professional quality, balanced speed',
+    supportsImageInput: false
+  },
+  'flux-pro-ultra': {
+    name: 'FLUX Pro Ultra',
+    version: '1.1',
+    modes: ['text-to-image'],
+    description: 'Ultra high quality, best for professional use',
     supportsImageInput: false
   },
   'stable-diffusion-xl': {
@@ -344,9 +352,6 @@ export function ArtworkTabSimple() {
                 }))}
                 className="w-full mt-1"
               />
-              {currentImageModelConfig.description && (
-                <p className="text-xs text-gray-400 mt-1">{currentImageModelConfig.description}</p>
-              )}
             </div>
             
             {currentImageModelConfig.supportsImageInput && (
@@ -354,21 +359,27 @@ export function ArtworkTabSimple() {
                 <Label>Generation Mode</Label>
                 <div className="flex gap-2 mt-1">
                   <Button
-                    variant={imageMode === 'text-to-image' ? 'default' : 'secondary'}
+                    variant={imageMode === 'text-to-image' ? 'secondary' : 'outline'}
                     size="sm"
                     onClick={() => {
                       setImageMode('text-to-image')
                       setSelectedImageForArtwork(null)
                     }}
-                    className="flex-1"
+                    className={cn(
+                      "flex-1",
+                      imageMode === 'text-to-image' && "ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-900"
+                    )}
                   >
                     Text to Image
                   </Button>
                   <Button
-                    variant={imageMode === 'image-to-image' ? 'default' : 'secondary'}
+                    variant={imageMode === 'image-to-image' ? 'secondary' : 'outline'}
                     size="sm"
                     onClick={() => setImageMode('image-to-image')}
-                    className="flex-1"
+                    className={cn(
+                      "flex-1",
+                      imageMode === 'image-to-image' && "ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-900"
+                    )}
                   >
                     Image to Image
                   </Button>
@@ -497,9 +508,6 @@ export function ArtworkTabSimple() {
                 }))}
                 className="w-full mt-1"
               />
-              {currentVideoModelConfig.description && (
-                <p className="text-xs text-gray-400 mt-1">{currentVideoModelConfig.description}</p>
-              )}
             </div>
             
             {currentVideoModelConfig.modes.length > 1 && (
