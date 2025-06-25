@@ -35,7 +35,105 @@ app.get('/api/songs', async (c) => {
   return c.json(songs.results || [])
 })
 
-// Model schemas endpoint
+// Model schemas endpoint - fetch from actual APIs
+app.get('/api/fal-model-schema/:modelId', async (c) => {
+  const modelId = c.req.param('modelId')
+  
+  if (!modelId) {
+    return c.json({ error: 'Model ID required' }, 400)
+  }
+  
+  try {
+    // Try to get schema from Fal.ai
+    const response = await fetch(`https://fal.run/${modelId}`, {
+      method: 'OPTIONS',
+      headers: {
+        'Authorization': `Key ${c.env.FAL_KEY}`,
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      // If OPTIONS doesn't work, try a different approach
+      // Some models might expose schema differently
+      console.error(`Failed to fetch schema for ${modelId}:`, response.status)
+      
+      // Return a basic schema based on what we know
+      return c.json({
+        inputs: getKnownModelInputs(modelId)
+      })
+    }
+    
+    const schema = await response.json()
+    return c.json(schema)
+  } catch (error) {
+    console.error('Error fetching model schema:', error)
+    return c.json({ 
+      error: 'Failed to fetch model schema',
+      inputs: getKnownModelInputs(modelId) // Fallback to known inputs
+    }, 500)
+  }
+})
+
+// Helper function to provide known inputs as fallback
+function getKnownModelInputs(modelId: string) {
+  // Video models
+  if (modelId.includes('kling-video')) {
+    const inputs: any = {
+      prompt: {
+        type: 'string',
+        description: 'Describe the motion and camera movement',
+        default: 'smooth camera movement, cinematic'
+      },
+      duration: {
+        type: 'integer',
+        enum: ['5', '10'],
+        default: '5',
+        description: 'Video duration in seconds'
+      },
+      cfg_scale: {
+        type: 'number',
+        minimum: 0.1,
+        maximum: 2.0,
+        default: 0.5,
+        description: 'Lower = more creative, Higher = more accurate'
+      }
+    }
+    
+    // Check if model supports tail image
+    if (modelId.includes('v1.6') || modelId.includes('v2')) {
+      inputs.tail_image_url = {
+        type: 'string',
+        description: 'Optional end frame for seamless transitions',
+        required: false
+      }
+    }
+    
+    return inputs
+  }
+  
+  // Image models
+  if (modelId.includes('flux') || modelId.includes('stable-diffusion')) {
+    return {
+      prompt: {
+        type: 'string',
+        description: 'Describe what you want to generate',
+        required: true
+      },
+      num_images: {
+        type: 'integer',
+        minimum: 1,
+        maximum: 8,
+        default: 4,
+        description: 'Number of images to generate'
+      }
+    }
+  }
+  
+  return {}
+}
+
+// Legacy model schemas endpoint for backward compatibility
 app.get('/api/model-schemas', async (c) => {
   const modelType = c.req.query('type')
   const modelId = c.req.query('id')
