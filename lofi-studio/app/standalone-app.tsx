@@ -15,8 +15,11 @@ import { Input } from './components/ui/Input'
 import { Textarea } from './components/ui/Textarea'
 import { Label } from './components/ui/Label'
 
+// Import icons
+import { Sun, Moon } from 'lucide-react'
+
 // Theme Provider implementation
-type Theme = "dark" | "light" | "system"
+type Theme = "dark" | "light"
 
 const ThemeContext = React.createContext<{
   theme: Theme
@@ -29,38 +32,18 @@ const ThemeContext = React.createContext<{
 function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem("lofi-studio-theme")
-    return (stored as Theme) || "system"
+    if (stored === "light" || stored === "dark") {
+      return stored as Theme
+    }
+    // Default to system preference
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
   })
 
   useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
-    const applyTheme = () => {
-      if (theme === "system") {
-        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light"
-        root.classList.add(systemTheme)
-      } else {
-        root.classList.add(theme)
-      }
-    }
-
-    applyTheme()
-
-    if (theme === "system") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-      const handleChange = () => {
-        root.classList.remove("light", "dark")
-        applyTheme()
-      }
-      
-      mediaQuery.addEventListener("change", handleChange)
-      return () => {
-        mediaQuery.removeEventListener("change", handleChange)
-      }
-    }
+    root.classList.add(theme)
   }, [theme])
 
   const updateTheme = (newTheme: Theme) => {
@@ -123,16 +106,14 @@ function Header({ activeTab, onTabChange }: { activeTab: string; onTabChange: (t
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => {
-              if (theme === "light") setTheme("dark")
-              else if (theme === "dark") setTheme("system")
-              else setTheme("light")
-            }}
-            title={`Current theme: ${theme}. Click to change.`}
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
           >
-            {theme === "light" && <span>☀️</span>}
-            {theme === "dark" && <span>🌙</span>}
-            {theme === "system" && <span>💻</span>}
+            {theme === "light" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
             <span className="sr-only">Toggle theme</span>
           </Button>
           
