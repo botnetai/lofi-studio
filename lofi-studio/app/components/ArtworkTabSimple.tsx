@@ -131,7 +131,7 @@ const VIDEO_MODEL_CONFIGS = {
     modes: ['standard', 'pro', 'master'],
     durations: [5, 10],
     supportsLoop: false, // Loop is just HTML5 playback, not generation
-    supportsTailImage: true,
+    supportsTailImage: false, // TODO: Verify from Fal.ai OpenAPI schema
     description: 'Latest Kling model with best quality'
   },
   'kling-2.0': {
@@ -139,7 +139,7 @@ const VIDEO_MODEL_CONFIGS = {
     modes: ['standard', 'pro', 'master'],
     durations: [5, 10],
     supportsLoop: false,
-    supportsTailImage: true,
+    supportsTailImage: false, // TODO: Verify from Fal.ai OpenAPI schema
     description: 'Previous generation Kling model'
   },
   'kling-1.6': {
@@ -147,7 +147,7 @@ const VIDEO_MODEL_CONFIGS = {
     modes: ['standard', 'pro'],
     durations: [5, 10],
     supportsLoop: false,
-    supportsTailImage: true,
+    supportsTailImage: false, // TODO: Verify from Fal.ai OpenAPI schema
     description: 'Stable version with good results'
   },
   'kling-1.5': {
