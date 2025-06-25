@@ -258,6 +258,8 @@ export function ArtworkTabSimple() {
     try {
       const selectedArtwork = allArtwork.find(a => a.id === selectedImageForVideo)
       
+      console.log('Generating video with model:', videoModel)
+      
       const response = await fetch('/api/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -841,11 +843,19 @@ export function ArtworkTabSimple() {
                           </div>
                         ) : (
                           <video
-                            autoPlay
                             muted
                             loop
                             playsInline
                             className="w-full h-full object-cover"
+                            onMouseEnter={(e) => {
+                              const video = e.currentTarget as HTMLVideoElement
+                              video.play().catch(() => {})
+                            }}
+                            onMouseLeave={(e) => {
+                              const video = e.currentTarget as HTMLVideoElement
+                              video.pause()
+                              video.currentTime = 0
+                            }}
                           >
                             <source src={item.url} type="video/mp4" />
                           </video>
