@@ -5,6 +5,9 @@ import { uploadToR2, generateMusic } from '~/lib/api'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { TrackList } from './TrackList'
+import { Select } from './ui/Select'
+import { Textarea } from './ui/Textarea'
+import { Input } from './ui/Input'
 
 export function MusicSection() {
   const [activeTab, setActiveTab] = useState<'upload' | 'generate'>('upload')
@@ -110,36 +113,35 @@ export function MusicSection() {
         </div>
       ) : (
         <div className="space-y-4">
-          <select
+          <Select
             value={service}
-            onChange={(e) => setService(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
-          >
-            <option value="goapi">GoAPI (Udio)</option>
-            <option value="udioapi">UdioAPI.pro</option>
-          </select>
+            onValueChange={setService}
+            options={[
+              { value: 'goapi', label: 'GoAPI (Udio)' },
+              { value: 'udioapi', label: 'UdioAPI.pro' }
+            ]}
+            className="w-full"
+          />
           
-          <textarea
+          <Textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe your lofi beat..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 min-h-[100px] resize-none"
+            className="w-full min-h-[100px]"
           />
           
           <div className="grid grid-cols-2 gap-4">
-            <input
+            <Input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Track title"
-              className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
             />
-            <input
+            <Input
               type="text"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="Tags (comma separated)"
-              className="bg-gray-800 border border-gray-700 rounded-lg px-4 py-2"
             />
           </div>
           

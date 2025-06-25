@@ -4,6 +4,8 @@ import { Button } from './ui/Button'
 import { Card } from './ui/Card'
 import { Textarea } from './ui/Textarea'
 import { Label } from './ui/Label'
+import { Select } from './ui/Select'
+import { Checkbox } from './ui/Checkbox'
 
 interface Artwork {
   id: string
@@ -291,18 +293,28 @@ export function ArtworkTabSimple() {
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg flex items-center justify-between">
           <span>{error}</span>
-          <button onClick={() => setError('')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => setError('')}
+          >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
       
       {success && (
         <div className="bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-lg flex items-center justify-between">
           <span>{success}</span>
-          <button onClick={() => setSuccess('')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => setSuccess('')}
+          >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
       
@@ -314,25 +326,24 @@ export function ArtworkTabSimple() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="artworkModel">AI Model</Label>
-              <select
-                id="artworkModel"
+              <Select
                 value={artworkModel}
-                onChange={(e) => {
-                  const newModel = e.target.value
-                  setArtworkModel(newModel)
-                  const config = IMAGE_MODEL_CONFIGS[newModel as keyof typeof IMAGE_MODEL_CONFIGS]
+                onValueChange={(value) => {
+                  setArtworkModel(value)
+                  const config = IMAGE_MODEL_CONFIGS[value as keyof typeof IMAGE_MODEL_CONFIGS]
                   // Reset to text-to-image if new model doesn't support image-to-image
                   if (!config.supportsImageInput && imageMode === 'image-to-image') {
                     setImageMode('text-to-image')
                     setSelectedImageForArtwork(null)
                   }
                 }}
-                className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                {Object.entries(IMAGE_MODEL_CONFIGS).map(([key, config]) => (
-                  <option key={key} value={key}>{config.name} {config.version}</option>
-                ))}
-              </select>
+                options={Object.entries(IMAGE_MODEL_CONFIGS).map(([key, config]) => ({
+                  value: key,
+                  label: `${config.name} ${config.version}`,
+                  description: config.description
+                }))}
+                className="w-full mt-1"
+              />
               {currentImageModelConfig.description && (
                 <p className="text-xs text-gray-400 mt-1">{currentImageModelConfig.description}</p>
               )}
@@ -414,17 +425,17 @@ export function ArtworkTabSimple() {
             
             <div>
               <Label htmlFor="numImages">Number of Images</Label>
-              <select
-                id="numImages"
-                value={numImages}
-                onChange={(e) => setNumImages(Number(e.target.value))}
-                className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                <option value={1}>1 Image</option>
-                <option value={2}>2 Images</option>
-                <option value={4}>4 Images</option>
-                <option value={8}>8 Images</option>
-              </select>
+              <Select
+                value={numImages.toString()}
+                onValueChange={(value) => setNumImages(Number(value))}
+                options={[
+                  { value: '1', label: '1 Image' },
+                  { value: '2', label: '2 Images' },
+                  { value: '4', label: '4 Images' },
+                  { value: '8', label: '8 Images' }
+                ]}
+                className="w-full mt-1"
+              />
             </div>
             
             <div>
@@ -465,11 +476,9 @@ export function ArtworkTabSimple() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="videoModel">Video Model</Label>
-              <select
-                id="videoModel"
+              <Select
                 value={videoModel}
-                onChange={(e) => {
-                  const newModel = e.target.value
+                onValueChange={(newModel) => {
                   setVideoModel(newModel)
                   const config = VIDEO_MODEL_CONFIGS[newModel as keyof typeof VIDEO_MODEL_CONFIGS]
                   // Reset mode if not supported by new model
@@ -481,12 +490,13 @@ export function ArtworkTabSimple() {
                     setSelectedTailImage(null)
                   }
                 }}
-                className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                {Object.entries(VIDEO_MODEL_CONFIGS).map(([key, config]) => (
-                  <option key={key} value={key}>{config.name}</option>
-                ))}
-              </select>
+                options={Object.entries(VIDEO_MODEL_CONFIGS).map(([key, config]) => ({
+                  value: key,
+                  label: config.name,
+                  description: config.description
+                }))}
+                className="w-full mt-1"
+              />
               {currentVideoModelConfig.description && (
                 <p className="text-xs text-gray-400 mt-1">{currentVideoModelConfig.description}</p>
               )}
@@ -495,31 +505,30 @@ export function ArtworkTabSimple() {
             {currentVideoModelConfig.modes.length > 1 && (
               <div>
                 <Label htmlFor="videoMode">Mode</Label>
-                <select
-                  id="videoMode"
+                <Select
                   value={videoMode}
-                  onChange={(e) => setVideoMode(e.target.value)}
-                  className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                >
-                  {currentVideoModelConfig.modes.includes('standard') && <option value="standard">Standard</option>}
-                  {currentVideoModelConfig.modes.includes('pro') && <option value="pro">Professional</option>}
-                  {currentVideoModelConfig.modes.includes('master') && <option value="master">Master (Highest Quality)</option>}
-                </select>
+                  onValueChange={setVideoMode}
+                  options={[
+                    ...(currentVideoModelConfig.modes.includes('standard') ? [{ value: 'standard', label: 'Standard' }] : []),
+                    ...(currentVideoModelConfig.modes.includes('pro') ? [{ value: 'pro', label: 'Professional' }] : []),
+                    ...(currentVideoModelConfig.modes.includes('master') ? [{ value: 'master', label: 'Master (Highest Quality)' }] : [])
+                  ]}
+                  className="w-full mt-1"
+                />
               </div>
             )}
             
             <div>
               <Label htmlFor="videoDuration">Duration (seconds)</Label>
-              <select
-                id="videoDuration"
-                value={videoDuration}
-                onChange={(e) => setVideoDuration(Number(e.target.value))}
-                className="w-full mt-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              >
-                {currentVideoModelConfig.durations.map(duration => (
-                  <option key={duration} value={duration}>{duration} seconds</option>
-                ))}
-              </select>
+              <Select
+                value={videoDuration.toString()}
+                onValueChange={(value) => setVideoDuration(Number(value))}
+                options={currentVideoModelConfig.durations.map(duration => ({
+                  value: duration.toString(),
+                  label: `${duration} seconds`
+                }))}
+                className="w-full mt-1"
+              />
             </div>
             
             
@@ -575,18 +584,16 @@ export function ArtworkTabSimple() {
                 
                 {selectedImageForVideo && (
                   <div className="flex items-center gap-2 mb-3">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="useSameAsStart"
                       checked={selectedTailImage === selectedImageForVideo}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                      onCheckedChange={(checked) => {
+                        if (checked) {
                           setSelectedTailImage(selectedImageForVideo)
                         } else {
                           setSelectedTailImage(null)
                         }
                       }}
-                      className="w-4 h-4 bg-gray-800 border-gray-600 rounded text-purple-500 focus:ring-purple-500"
                     />
                     <Label htmlFor="useSameAsStart" className="cursor-pointer text-sm">
                       Use same as start frame
