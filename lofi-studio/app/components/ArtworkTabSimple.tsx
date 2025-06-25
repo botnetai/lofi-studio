@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Image, Loader2, Check, X, RefreshCw } from 'lucide-react'
 import { Button } from './ui/Button'
 import { Card } from './ui/Card'
@@ -7,6 +7,60 @@ import { Label } from './ui/Label'
 import { Select } from './ui/Select'
 import { Checkbox } from './ui/Checkbox'
 import { cn } from '../lib/utils'
+import { MediaModal } from './ui/MediaModal'
+
+// Video Card Component with proper hover handling
+function VideoCard({ video, metadata, onClick }: { video: any; metadata: any; onClick: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [isHovered, setIsHovered] = useState(false)
+  
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isHovered) {
+        videoRef.current.play().catch(() => {})
+      } else {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
+    }
+  }, [isHovered])
+  
+  return (
+    <div
+      className="relative group rounded-lg overflow-hidden bg-gray-800 transition-all duration-200 hover:scale-105 cursor-pointer"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      <div className="aspect-square">
+        <video
+          ref={videoRef}
+          muted
+          loop
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src={video.url} type="video/mp4" />
+        </video>
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+          <div className="text-xs font-medium mb-1">{metadata.model || 'Unknown model'}</div>
+          <div className="text-xs opacity-75 line-clamp-2">
+            {video.prompt || 'No prompt'}
+          </div>
+          <div className="text-xs opacity-50 mt-1">
+            {metadata.duration && `${metadata.duration}s • `}
+            {new Date(video.created_at).toLocaleDateString()}
+          </div>
+        </div>
+      </div>
+      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-2 py-1">
+        <span className="text-xs text-white font-medium">Video</span>
+      </div>
+    </div>
+  )
+}
 
 interface Artwork {
   id: string
@@ -144,6 +198,8 @@ export function ArtworkTabSimple() {
   // UI state
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [selectedMedia, setSelectedMedia] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   
   // Clear messages after timeout
   useEffect(() => {
@@ -499,10 +555,12 @@ export function ArtworkTabSimple() {
               <Select
                 value={videoModel}
                 onValueChange={(newModel) => {
+                  console.log('Video model changed from', videoModel, 'to', newModel)
                   setVideoModel(newModel)
                   const config = VIDEO_MODEL_CONFIGS[newModel as keyof typeof VIDEO_MODEL_CONFIGS]
                   // Reset mode if not supported by new model
                   if (!config.modes.includes(videoMode)) {
+                    console.log('Resetting mode from', videoMode, 'to', config.modes[0])
                     setVideoMode(config.modes[0])
                   }
                   // Reset tail image if not supported
@@ -792,7 +850,11 @@ export function ArtworkTabSimple() {
                   return (
                     <div
                       key={item.id}
-                      className="relative group rounded-lg overflow-hidden bg-gray-800 transition-all duration-200 hover:scale-105"
+                      className="relative group rounded-lg overflow-hidden bg-gray-800 transition-all duration-200 hover:scale-105 cursor-pointer"
+                      onClick={() => {
+                        setSelectedMedia({ ...item, type: 'image' })
+                        setIsModalOpen(true)
+                      }}
                     >
                       <div className="aspect-square">
                         <img 
@@ -801,7 +863,7 @@ export function ArtworkTabSimple() {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                         <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                           <div className="text-xs font-medium mb-1">{modelName}</div>
                           <div className="text-xs opacity-75 line-clamp-2">
@@ -823,70 +885,51 @@ export function ArtworkTabSimple() {
                   const isGenerating = status === 'generating'
                   const isFailed = status === 'failed'
                   
-                  return (
-                    <div 
-                      key={item.id} 
-                      className="relative group rounded-lg overflow-hidden bg-gray-800 transition-all duration-200 hover:scale-105"
-                    >
-                      <div className="aspect-square">
-                        {isGenerating ? (
-                          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
-                            <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
-                            <p className="text-sm text-gray-400">Generating video...</p>
-                            <p className="text-xs text-gray-500 mt-2">1-2 minutes</p>
+                  if (isGenerating || isFailed) {
+                    return (
+                      <div 
+                        key={item.id} 
+                        className="relative group rounded-lg overflow-hidden bg-gray-800 transition-all duration-200 hover:scale-105"
+                      >
+                        <div className="aspect-square">
+                          {isGenerating ? (
+                            <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+                              <Loader2 className="w-12 h-12 text-purple-500 animate-spin mb-4" />
+                              <p className="text-sm text-gray-400">Generating video...</p>
+                              <p className="text-xs text-gray-500 mt-2">1-2 minutes</p>
+                            </div>
+                          ) : (
+                            <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
+                              <X className="w-12 h-12 text-red-500 mb-4" />
+                              <p className="text-sm text-red-400">Failed</p>
+                              <p className="text-xs text-gray-500 mt-2 px-4 text-center">{metadata.error || 'Unknown error'}</p>
+                            </div>
+                          )}
+                        </div>
+                        {isGenerating && (
+                          <div className="absolute top-2 right-2 bg-purple-500 rounded-full p-1">
+                            <div className="w-4 h-4" />
                           </div>
-                        ) : isFailed ? (
-                          <div className="w-full h-full bg-gray-900 flex flex-col items-center justify-center">
-                            <X className="w-12 h-12 text-red-500 mb-4" />
-                            <p className="text-sm text-red-400">Failed</p>
-                            <p className="text-xs text-gray-500 mt-2 px-4 text-center">{metadata.error || 'Unknown error'}</p>
+                        )}
+                        {isFailed && (
+                          <div className="absolute top-2 right-2 bg-red-500 rounded-full p-1">
+                            <X className="w-4 h-4 text-white" />
                           </div>
-                        ) : (
-                          <video
-                            muted
-                            loop
-                            playsInline
-                            className="w-full h-full object-cover"
-                            onMouseEnter={(e) => {
-                              const video = e.currentTarget as HTMLVideoElement
-                              video.play().catch(() => {})
-                            }}
-                            onMouseLeave={(e) => {
-                              const video = e.currentTarget as HTMLVideoElement
-                              video.pause()
-                              video.currentTime = 0
-                            }}
-                          >
-                            <source src={item.url} type="video/mp4" />
-                          </video>
                         )}
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                          <div className="text-xs font-medium mb-1">{metadata.model || 'Unknown model'}</div>
-                          <div className="text-xs opacity-75 line-clamp-2">
-                            {item.prompt || 'No prompt'}
-                          </div>
-                          <div className="text-xs opacity-50 mt-1">
-                            {metadata.duration && `${metadata.duration}s • `}
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      {isGenerating && (
-                        <div className="absolute top-2 right-2 bg-purple-500 rounded-full p-1">
-                          <div className="w-4 h-4" />
-                        </div>
-                      )}
-                      {isFailed && (
-                        <div className="absolute top-2 right-2 bg-red-500 rounded-full p-1">
-                          <X className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm rounded px-2 py-1">
-                        <span className="text-xs text-white font-medium">Video</span>
-                      </div>
-                    </div>
+                    )
+                  }
+                  
+                  return (
+                    <VideoCard 
+                      key={item.id}
+                      video={item} 
+                      metadata={metadata}
+                      onClick={() => {
+                        setSelectedMedia({ ...item, type: 'video' })
+                        setIsModalOpen(true)
+                      }}
+                    />
                   )
                 }
               })}
@@ -894,6 +937,16 @@ export function ArtworkTabSimple() {
           )
         })()}
       </Card>
+      
+      {/* Media Modal */}
+      <MediaModal 
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedMedia(null)
+        }}
+        media={selectedMedia || {}}
+      />
     </div>
   )
 }

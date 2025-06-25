@@ -14,15 +14,20 @@ interface SelectProps {
 }
 
 export const Select = forwardRef<HTMLDivElement, SelectProps>(
-  ({ options, placeholder = 'Select an option', className, value, ...props }, ref) => {
+  ({ options, placeholder = 'Select an option', className, value, onValueChange, ...props }, ref) => {
     // Find the selected option to display its description
     const selectedOption = useMemo(
       () => options.find(opt => opt.value === value),
       [options, value]
     )
     
+    const handleValueChange = (newValue: string) => {
+      console.log('Select component value change:', newValue)
+      onValueChange?.(newValue)
+    }
+    
     return (
-      <BaseSelect.Root value={value} {...props}>
+      <BaseSelect.Root value={value} onValueChange={handleValueChange} {...props}>
         <BaseSelect.Trigger
           ref={ref}
           className={cn(
