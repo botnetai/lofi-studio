@@ -8,6 +8,7 @@ import { Select } from './ui/Select'
 import { Checkbox } from './ui/Checkbox'
 import { cn } from '../lib/utils'
 import { MediaModal } from './ui/MediaModal'
+import { DynamicGenerationForm } from './DynamicGenerationForm'
 
 // Video Card Component with proper hover handling
 function VideoCard({ video, metadata, onClick }: { video: any; metadata: any; onClick: () => void }) {
@@ -79,116 +80,11 @@ interface Video {
   status?: 'generating' | 'completed' | 'failed'
 }
 
-// Model configurations
-const IMAGE_MODEL_CONFIGS = {
-  'flux-kontext': {
-    name: 'FLUX Kontext',
-    version: '1.0',
-    modes: ['text-to-image', 'image-to-image'],
-    description: 'Best for image-to-image transformations',
-    supportsImageInput: true
-  },
-  'flux-schnell': {
-    name: 'FLUX Schnell',
-    version: '1.0',
-    modes: ['text-to-image'],
-    description: 'Fast generation, good quality',
-    supportsImageInput: false
-  },
-  'flux-dev': {
-    name: 'FLUX Dev',
-    version: '1.0',
-    modes: ['text-to-image'],
-    description: 'Balanced speed and quality',
-    supportsImageInput: false
-  },
-  'flux-pro': {
-    name: 'FLUX Pro',
-    version: '1.1',
-    modes: ['text-to-image'],
-    description: 'Professional quality, balanced speed',
-    supportsImageInput: false
-  },
-  'flux-pro-ultra': {
-    name: 'FLUX Pro Ultra',
-    version: '1.1',
-    modes: ['text-to-image'],
-    description: 'Ultra high quality, best for professional use',
-    supportsImageInput: false
-  },
-  'stable-diffusion-xl': {
-    name: 'Stable Diffusion XL',
-    version: 'Base 1.0',
-    modes: ['text-to-image'],
-    description: 'Classic model, fast and reliable',
-    supportsImageInput: false
-  }
-}
-
-const VIDEO_MODEL_CONFIGS = {
-  'kling-2.1': {
-    name: 'Kling 2.1 (Latest)',
-    modes: ['standard', 'pro', 'master'],
-    durations: [5, 10],
-    supportsLoop: false, // Loop is just HTML5 playback, not generation
-    supportsTailImage: false, // TODO: Verify from Fal.ai OpenAPI schema
-    description: 'Latest Kling model with best quality'
-  },
-  'kling-2.0': {
-    name: 'Kling 2.0',
-    modes: ['standard', 'pro', 'master'],
-    durations: [5, 10],
-    supportsLoop: false,
-    supportsTailImage: false, // TODO: Verify from Fal.ai OpenAPI schema
-    description: 'Previous generation Kling model'
-  },
-  'kling-1.6': {
-    name: 'Kling 1.6',
-    modes: ['standard', 'pro'],
-    durations: [5, 10],
-    supportsLoop: false,
-    supportsTailImage: false, // TODO: Verify from Fal.ai OpenAPI schema
-    description: 'Stable version with good results'
-  },
-  'kling-1.5': {
-    name: 'Kling 1.5',
-    modes: ['pro'],
-    durations: [5, 10],
-    supportsLoop: false,
-    supportsTailImage: false,
-    description: 'Earlier version, pro mode only'
-  },
-  'kling-1.0': {
-    name: 'Kling 1.0',
-    modes: ['pro'],
-    durations: [5, 10],
-    supportsLoop: false,
-    supportsTailImage: false,
-    description: 'Original Kling model'
-  }
-}
 
 export function ArtworkTabSimple() {
-  // State for artwork generation
-  const [artworkModel, setArtworkModel] = useState('flux-kontext')
-  const [artworkPrompt, setArtworkPrompt] = useState('')
-  const [isGeneratingArtwork, setIsGeneratingArtwork] = useState(false)
-  const [numImages, setNumImages] = useState(4)
+  // State for generation mode
   const [imageMode, setImageMode] = useState<'text-to-image' | 'image-to-image'>('text-to-image')
   const [selectedImageForArtwork, setSelectedImageForArtwork] = useState<string | null>(null)
-  
-  // State for video generation
-  const [selectedImageForVideo, setSelectedImageForVideo] = useState<string | null>(null)
-  const [videoModel, setVideoModel] = useState('kling-2.1')
-  const [videoPrompt, setVideoPrompt] = useState('')
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
-  const [videoDuration, setVideoDuration] = useState(5)
-  const [videoMode, setVideoMode] = useState('standard')
-  const [selectedTailImage, setSelectedTailImage] = useState<string | null>(null)
-  
-  // Get current model configs
-  const currentImageModelConfig = IMAGE_MODEL_CONFIGS[artworkModel as keyof typeof IMAGE_MODEL_CONFIGS]
-  const currentVideoModelConfig = VIDEO_MODEL_CONFIGS[videoModel as keyof typeof VIDEO_MODEL_CONFIGS]
   
   // Media library state
   const [allArtwork, setAllArtwork] = useState<Artwork[]>([])
@@ -248,32 +144,28 @@ export function ArtworkTabSimple() {
     return () => clearInterval(interval)
   }, [fetchArtwork, fetchVideos])
   
-  // Generate artwork
-  const generateArtwork = async () => {
-    if (!artworkPrompt) {
-      setError('Please enter an artwork prompt')
-      return
-    }
-    
-    if (imageMode === 'image-to-image' && !selectedImageForArtwork) {
-      setError('Please select a source image')
-      return
-    }
-    
-    setIsGeneratingArtwork(true)
+  // Handle image generation
+  const handleImageGenerate = async (modelId: string, params: any) => {
     setError('')
     setSuccess('')
     
     try {
+      // Extract proper parameters from dynamic form
       const body: any = {
-        prompt: artworkPrompt,
-        model: artworkModel,
-        numImages: numImages,
-        style: imageMode === 'text-to-image' ? 'lofi anime aesthetic, album cover art' : ''
+        prompt: params.prompt || '',
+        model: modelId,
+        numImages: params.num_images || 4
       }
       
+      // Add any additional parameters from the model schema
+      Object.entries(params).forEach(([key, value]) => {
+        if (key !== 'prompt' && key !== 'num_images' && value !== undefined) {
+          body[key] = value
+        }
+      })
+      
       if (imageMode === 'image-to-image') {
-        body.imageId = selectedImageForArtwork
+        body.imageId = params.imageId
         body.mode = 'image-to-image'
       }
       
@@ -290,42 +182,38 @@ export function ArtworkTabSimple() {
       }
       
       setSuccess('Artwork generated successfully!')
-      setArtworkPrompt('') // Clear prompt after success
-      setSelectedImageForArtwork(null) // Clear source image selection
-      fetchArtwork() // Refresh artwork list
+      setSelectedImageForArtwork(null)
+      fetchArtwork()
     } catch (error: any) {
       setError(error.message)
-    } finally {
-      setIsGeneratingArtwork(false)
+      throw error
     }
   }
   
-  // Generate video
-  const generateVideo = async () => {
-    if (!selectedImageForVideo) {
-      setError('Please select an image')
-      return
-    }
-    
-    setIsGeneratingVideo(true)
+  // Handle video generation
+  const handleVideoGenerate = async (modelId: string, params: any) => {
     setError('')
     setSuccess('')
     
     try {
-      const selectedArtwork = allArtwork.find(a => a.id === selectedImageForVideo)
-      
-      console.log('Generating video with model:', videoModel)
+      // Map model ID to our expected format
+      const modelParts = modelId.split('/')
+      const modelKey = modelParts[modelParts.length - 1]
+        .replace('/image-to-video', '')
+        .replace('/standard', '')
+        .replace('/pro', '')
+        .replace('/master', '')
       
       const response = await fetch('/api/video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageId: selectedImageForVideo,
-          prompt: videoPrompt,
-          model: videoModel,
-          duration: videoDuration,
-          mode: videoMode,
-          tailImageId: selectedTailImage
+          imageId: params.imageId,
+          prompt: params.prompt || '',
+          model: modelKey,
+          duration: params.duration || 5,
+          mode: params.mode || 'standard',
+          ...params
         })
       })
       
@@ -341,15 +229,10 @@ export function ArtworkTabSimple() {
         setSuccess('Video generation started! Your video will appear in the Media Library in 1-2 minutes.')
       }
       
-      setVideoPrompt('') // Clear prompt after success
-      setSelectedImageForVideo(null) // Clear selection
-      
-      // Refresh to show the new video
       setTimeout(() => fetchVideos(), 500)
     } catch (error: any) {
       setError(error.message)
-    } finally {
-      setIsGeneratingVideo(false)
+      throw error
     }
   }
   
@@ -385,13 +268,11 @@ export function ArtworkTabSimple() {
       )}
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Artwork Generation Card */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-6">Generate Image</h2>
-          
-          <div className="space-y-4">
+        {/* Image Generation Card - Mode Selector outside of DynamicGenerationForm */}
+        <div>
+          <Card className="p-6 mb-4">
             <div>
-              <Label>Generation Mode</Label>
+              <Label>Image Generation Mode</Label>
               <div className="flex gap-2 mt-1">
                 <Button
                   variant={imageMode === 'text-to-image' ? 'secondary' : 'outline'}
@@ -412,11 +293,6 @@ export function ArtworkTabSimple() {
                   size="sm"
                   onClick={() => {
                     setImageMode('image-to-image')
-                    // Set to flux-kontext if current model doesn't support image-to-image
-                    const currentConfig = IMAGE_MODEL_CONFIGS[artworkModel as keyof typeof IMAGE_MODEL_CONFIGS]
-                    if (!currentConfig.supportsImageInput) {
-                      setArtworkModel('flux-kontext')
-                    }
                   }}
                   className={cn(
                     "flex-1",
@@ -427,340 +303,24 @@ export function ArtworkTabSimple() {
                 </Button>
               </div>
             </div>
-            
-            <div>
-              <Label htmlFor="artworkModel">AI Model</Label>
-              <Select
-                value={artworkModel}
-                onValueChange={(value) => {
-                  setArtworkModel(value)
-                }}
-                options={Object.entries(IMAGE_MODEL_CONFIGS)
-                  .filter(([key, config]) => {
-                    // Filter models based on selected mode
-                    if (imageMode === 'image-to-image') {
-                      return config.supportsImageInput
-                    }
-                    return true // All models support text-to-image
-                  })
-                  .map(([key, config]) => ({
-                    value: key,
-                    label: `${config.name} ${config.version}`,
-                    description: config.description
-                  }))}
-                className="w-full mt-1"
-              />
-            </div>
-            
-            {imageMode === 'image-to-image' && (
-              <div>
-                <Label>Source Image</Label>
-                {selectedImageForArtwork ? (
-                  <div className="mt-2">
-                    <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-                      <img 
-                        src={allArtwork.find(a => a.id === selectedImageForArtwork)?.url} 
-                        alt="Selected Source" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                        <Check className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSelectedImageForArtwork(null)}
-                      className="mt-2"
-                    >
-                      Remove Source Image
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    <p className="text-sm text-gray-400">Select a source image from below</p>
-                    <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-                      {allArtwork.map((art) => (
-                        <div
-                          key={art.id}
-                          className="relative cursor-pointer rounded overflow-hidden hover:ring-2 hover:ring-purple-500"
-                          onClick={() => setSelectedImageForArtwork(art.id)}
-                        >
-                          <img 
-                            src={art.url} 
-                            alt="Source option" 
-                            className="w-full h-full object-cover aspect-square"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div>
-              <Label htmlFor="numImages">Number of Images</Label>
-              <Select
-                value={numImages.toString()}
-                onValueChange={(value) => setNumImages(Number(value))}
-                options={[
-                  { value: '1', label: '1 Image' },
-                  { value: '2', label: '2 Images' },
-                  { value: '4', label: '4 Images' },
-                  { value: '8', label: '8 Images' }
-                ]}
-                className="w-full mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="artworkPrompt">
-                {imageMode === 'text-to-image' ? 'Describe your album artwork' : 'Describe the transformation'}
-              </Label>
-              <Textarea
-                id="artworkPrompt"
-                value={artworkPrompt}
-                onChange={(e) => setArtworkPrompt(e.target.value)}
-                placeholder="e.g., cozy bedroom with rain on window, lofi aesthetic, anime style"
-                className="mt-1 min-h-[100px]"
-                rows={4}
-              />
-            </div>
-            
-            <Button
-              onClick={generateArtwork}
-              disabled={isGeneratingArtwork || !artworkPrompt || (imageMode === 'image-to-image' && !selectedImageForArtwork)}
-              className="w-full"
-            >
-              {isGeneratingArtwork ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                'Generate Image'
-              )}
-            </Button>
-          </div>
-        </Card>
+          </Card>
+          
+          {/* Dynamic Generation Form */}
+          <DynamicGenerationForm
+            category={imageMode}
+            onGenerate={handleImageGenerate}
+            selectedImage={selectedImageForArtwork}
+            allImages={allArtwork}
+          />
+        </div>
         
         {/* Video Generation Card */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-bold mb-6">Generate Video</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="videoModel">Video Model</Label>
-              <Select
-                value={videoModel}
-                onValueChange={(newModel) => {
-                  console.log('Video model changed from', videoModel, 'to', newModel)
-                  setVideoModel(newModel)
-                  const config = VIDEO_MODEL_CONFIGS[newModel as keyof typeof VIDEO_MODEL_CONFIGS]
-                  // Reset mode if not supported by new model
-                  if (!config.modes.includes(videoMode)) {
-                    console.log('Resetting mode from', videoMode, 'to', config.modes[0])
-                    setVideoMode(config.modes[0])
-                  }
-                  // Reset tail image if not supported
-                  if (!config.supportsTailImage) {
-                    setSelectedTailImage(null)
-                  }
-                }}
-                options={Object.entries(VIDEO_MODEL_CONFIGS).map(([key, config]) => ({
-                  value: key,
-                  label: config.name,
-                  description: config.description
-                }))}
-                className="w-full mt-1"
-              />
-            </div>
-            
-            {currentVideoModelConfig.modes.length > 1 && (
-              <div>
-                <Label htmlFor="videoMode">Mode</Label>
-                <Select
-                  value={videoMode}
-                  onValueChange={setVideoMode}
-                  options={[
-                    ...(currentVideoModelConfig.modes.includes('standard') ? [{ value: 'standard', label: 'Standard' }] : []),
-                    ...(currentVideoModelConfig.modes.includes('pro') ? [{ value: 'pro', label: 'Professional' }] : []),
-                    ...(currentVideoModelConfig.modes.includes('master') ? [{ value: 'master', label: 'Master (Highest Quality)' }] : [])
-                  ]}
-                  className="w-full mt-1"
-                />
-              </div>
-            )}
-            
-            <div>
-              <Label htmlFor="videoDuration">Duration (seconds)</Label>
-              <Select
-                value={videoDuration.toString()}
-                onValueChange={(value) => setVideoDuration(Number(value))}
-                options={currentVideoModelConfig.durations.map(duration => ({
-                  value: duration.toString(),
-                  label: `${duration} seconds`
-                }))}
-                className="w-full mt-1"
-              />
-            </div>
-            
-            
-            <div>
-              <Label>Start Frame</Label>
-              {selectedImageForVideo ? (
-                <div className="mt-2">
-                  <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-                    <img 
-                      src={allArtwork.find(a => a.id === selectedImageForVideo)?.url} 
-                      alt="Selected Start Frame" 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                      <Check className="w-8 h-8 text-white" />
-                    </div>
-                  </div>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setSelectedImageForVideo(null)}
-                    className="mt-2"
-                  >
-                    Remove Start Frame
-                  </Button>
-                </div>
-              ) : (
-                <div className="mt-2 space-y-2">
-                  <p className="text-sm text-gray-400">Click an image below to set as start frame</p>
-                  <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-                    {allArtwork.map((art) => (
-                      <div
-                        key={art.id}
-                        className="relative cursor-pointer rounded overflow-hidden hover:ring-2 hover:ring-purple-500"
-                        onClick={() => setSelectedImageForVideo(art.id)}
-                      >
-                        <img 
-                          src={art.url} 
-                          alt="Start frame option" 
-                          className="w-full h-full object-cover aspect-square"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {currentVideoModelConfig.supportsTailImage && (
-              <div>
-                <Label>End Frame (optional)</Label>
-                <p className="text-xs text-gray-400 mb-2">For seamless transitions</p>
-                
-                {selectedImageForVideo && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <Checkbox
-                      id="useSameAsStart"
-                      checked={selectedTailImage === selectedImageForVideo}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedTailImage(selectedImageForVideo)
-                        } else {
-                          setSelectedTailImage(null)
-                        }
-                      }}
-                    />
-                    <Label htmlFor="useSameAsStart" className="cursor-pointer text-sm">
-                      Use same as start frame
-                    </Label>
-                  </div>
-                )}
-                
-                {selectedTailImage ? (
-                  <div className="mt-2">
-                    <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-                      <img 
-                        src={allArtwork.find(a => a.id === selectedTailImage)?.url} 
-                        alt="Selected End Frame" 
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-orange-500/20 flex items-center justify-center">
-                        <Check className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setSelectedTailImage(null)}
-                      className="mt-2"
-                    >
-                      Remove End Frame
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="mt-2 space-y-2">
-                    {!selectedImageForVideo ? (
-                      <p className="text-sm text-gray-400">Select a start frame first</p>
-                    ) : (
-                      <>
-                        <p className="text-sm text-gray-400">Click an image below to set as end frame</p>
-                        <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-                          {allArtwork.map((art) => (
-                            <div
-                              key={art.id}
-                              className={`relative cursor-pointer rounded overflow-hidden hover:ring-2 hover:ring-orange-500 ${
-                                art.id === selectedImageForVideo ? 'ring-2 ring-purple-500' : ''
-                              }`}
-                              onClick={() => setSelectedTailImage(art.id)}
-                            >
-                              <img 
-                                src={art.url} 
-                                alt="End frame option" 
-                                className="w-full h-full object-cover aspect-square"
-                              />
-                              {art.id === selectedImageForVideo && (
-                                <div className="absolute inset-0 bg-purple-500/10 flex items-center justify-center">
-                                  <span className="text-xs bg-black/60 text-white px-2 py-1 rounded">Start</span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div>
-              <Label htmlFor="videoPrompt">Video Prompt (optional)</Label>
-              <Textarea
-                id="videoPrompt"
-                value={videoPrompt}
-                onChange={(e) => setVideoPrompt(e.target.value)}
-                placeholder="Additional instructions for video generation..."
-                className="mt-1"
-                rows={2}
-              />
-            </div>
-            
-            <Button
-              onClick={generateVideo}
-              disabled={isGeneratingVideo || !selectedImageForVideo}
-              className="w-full"
-            >
-              {isGeneratingVideo ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Video...
-                </>
-              ) : (
-                'Generate Video'
-              )}
-            </Button>
-          </div>
-        </Card>
+        <DynamicGenerationForm
+          category="image-to-video"
+          onGenerate={handleVideoGenerate}
+          selectedImage={null}
+          allImages={allArtwork}
+        />
       </div>
       
       {/* Media Library */}

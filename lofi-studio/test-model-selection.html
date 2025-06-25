@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Model Selection</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            background: #1a1a1a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+        .info { border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>Lofi Studio - Model Selection Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Test Model Schema Fetching</h2>
+        <button onclick="testModelSchema('fal-ai/kling-video/v2.1/standard/image-to-video')">Test Kling 2.1 Standard</button>
+        <button onclick="testModelSchema('fal-ai/kling-video/v1.6/pro/image-to-video')">Test Kling 1.6 Pro</button>
+        <button onclick="testModelSchema('fal-ai/flux-pro/v1.1-ultra')">Test FLUX Pro Ultra</button>
+        <div id="schema-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Test Video Generation</h2>
+        <p>Select an image and model to test video generation:</p>
+        <select id="test-image">
+            <option value="54ee16a8-5454-466f-aa12-fdb404dabbd2">Black cat in grass</option>
+        </select>
+        <select id="test-model">
+            <option value="kling-2.1">Kling 2.1</option>
+            <option value="kling-2.0">Kling 2.0</option>
+            <option value="kling-1.6">Kling 1.6</option>
+            <option value="kling-1.5">Kling 1.5</option>
+            <option value="kling-1.0">Kling 1.0</option>
+        </select>
+        <select id="test-mode">
+            <option value="standard">Standard</option>
+            <option value="pro">Pro</option>
+            <option value="master">Master</option>
+        </select>
+        <button onclick="testVideoGeneration()">Generate Video</button>
+        <div id="video-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Recent Videos</h2>
+        <button onclick="fetchRecentVideos()">Fetch Recent Videos</button>
+        <div id="recent-videos"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://lofi-studio.botnet-599.workers.dev';
+        
+        function log(message, type = 'info', containerId = 'schema-results') {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `result ${type}`;
+            result.textContent = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+            container.appendChild(result);
+        }
+        
+        async function testModelSchema(modelId) {
+            log(`Testing schema for: ${modelId}`, 'info');
+            try {
+                const response = await fetch(`${API_BASE}/api/fal-model-schema/${encodeURIComponent(modelId)}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`Success! Schema for ${modelId}:`, 'success');
+                    log(data, 'info');
+                    
+                    // Check for tail_image_url support
+                    const hasTailImage = data.inputs && data.inputs.tail_image_url;
+                    log(`Supports tail_image_url: ${hasTailImage ? 'YES' : 'NO'}`, hasTailImage ? 'success' : 'error');
+                } else {
+                    log(`Error fetching schema: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`Network error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testVideoGeneration() {
+            const imageId = document.getElementById('test-image').value;
+            const model = document.getElementById('test-model').value;
+            const mode = document.getElementById('test-mode').value;
+            
+            log(`Generating video with model: ${model} (${mode})`, 'info', 'video-results');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/video`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        imageId,
+                        model,
+                        mode,
+                        duration: 5,
+                        prompt: 'test video generation'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    log(`Video generation started! ID: ${data.videoId}`, 'success', 'video-results');
+                    log(`Status: ${data.status}`, 'info', 'video-results');
+                    
+                    // Poll for completion
+                    setTimeout(() => checkVideoStatus(data.videoId), 5000);
+                } else {
+                    log(`Error: ${data.error || 'Failed to generate video'}`, 'error', 'video-results');
+                }
+            } catch (error) {
+                log(`Network error: ${error.message}`, 'error', 'video-results');
+            }
+        }
+        
+        async function checkVideoStatus(videoId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/videos`);
+                const videos = await response.json();
+                const video = videos.find(v => v.id === videoId);
+                
+                if (video) {
+                    const metadata = JSON.parse(video.metadata || '{}');
+                    log(`Video ${videoId} status: ${video.status}`, video.status === 'completed' ? 'success' : 'info', 'video-results');
+                    if (metadata.error) {
+                        log(`Error: ${metadata.error}`, 'error', 'video-results');
+                    }
+                }
+            } catch (error) {
+                log(`Error checking status: ${error.message}`, 'error', 'video-results');
+            }
+        }
+        
+        async function fetchRecentVideos() {
+            log('Fetching recent videos...', 'info', 'recent-videos');
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/videos`);
+                const videos = await response.json();
+                
+                log(`Found ${videos.length} videos`, 'success', 'recent-videos');
+                
+                videos.slice(0, 5).forEach(video => {
+                    const metadata = JSON.parse(video.metadata || '{}');
+                    const info = {
+                        id: video.id,
+                        status: video.status,
+                        model: metadata.model,
+                        mode: metadata.mode,
+                        created: new Date(video.created_at).toLocaleString(),
+                        error: metadata.error
+                    };
+                    log(info, video.status === 'completed' ? 'success' : 'error', 'recent-videos');
+                });
+            } catch (error) {
+                log(`Network error: ${error.message}`, 'error', 'recent-videos');
+            }
+        }
+        
+        // Initial load
+        fetchRecentVideos();
+    </script>
+</body>
+</html>
