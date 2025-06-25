@@ -54,6 +54,12 @@
   - [x] Videos now show in Media Library immediately with progress indicator
   - [x] Auto-refresh updates video status from generating to completed
   - [x] Added proper error handling for failed video generations
+- [x] Fix video generation async issues
+  - [x] Identified that Cloudflare Workers executionCtx.waitUntil() wasn't working properly
+  - [x] Fixed bug where videoId was being regenerated instead of using passed ID
+  - [x] Switched to synchronous video generation for reliability
+  - [x] Updated frontend to handle sync responses properly
+  - [x] Videos now generate successfully and appear in Media Library
 
 ## Pending Tasks
 - [ ] Set up audio processing pipeline

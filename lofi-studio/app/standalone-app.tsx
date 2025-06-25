@@ -6,6 +6,10 @@ import './styles/globals.css'
 import { ArtworkTabSimple } from './components/ArtworkTabSimple'
 import { CompileTab } from './components/CompileTab'
 
+// Import Base UI components
+import { Tabs } from './components/ui/Tabs'
+import { Button } from './components/ui/Button'
+
 // Theme Provider implementation
 type Theme = "dark" | "light" | "system"
 
@@ -66,8 +70,8 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-// Navigation Component
-function Navigation({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
+// Header Component with Base UI Tabs
+function Header({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) {
   const { theme, setTheme } = React.useContext(ThemeContext)
   
   const navigation = [
@@ -77,69 +81,63 @@ function Navigation({ activeTab, setActiveTab }: { activeTab: string, setActiveT
     { id: 'publish', name: 'Publish', icon: '📤' },
   ]
   
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId)
-    // Update URL without page reload
-    const path = tabId === 'music' ? '/' : `/${tabId}`
-    window.history.pushState({ tab: tabId }, '', path)
-  }
-  
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-800 bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-gray-950/60">
+      <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
           <a 
             href="/" 
             className="mr-6 flex items-center space-x-2"
             onClick={(e) => {
               e.preventDefault()
-              handleTabClick('music')
+              onTabChange('music')
             }}
           >
-            <span className="font-bold">Lofi Studio</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Lofi Studio
+            </span>
           </a>
-          <nav className="flex items-center space-x-4 lg:space-x-6">
+          
+          <Tabs.List className="flex items-center gap-1 bg-transparent border-0 p-0">
             {navigation.map((item) => (
-              <button
+              <Tabs.Trigger
                 key={item.id}
-                onClick={() => handleTabClick(item.id)}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  activeTab === item.id
-                    ? 'text-foreground'
-                    : 'text-muted-foreground'
-                }`}
+                value={item.id}
+                className="relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-gray-800/50 data-[selected]:bg-gray-800 data-[selected]:text-white"
               >
                 <span className="flex items-center gap-2">
                   <span>{item.icon}</span>
                   <span className="hidden lg:inline">{item.name}</span>
                 </span>
-              </button>
+              </Tabs.Trigger>
             ))}
-          </nav>
+          </Tabs.List>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <nav className="flex items-center space-x-2">
-            <button
-              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-10 w-10"
-              onClick={() => {
-                if (theme === "light") setTheme("dark")
-                else if (theme === "dark") setTheme("system")
-                else setTheme("light")
-              }}
-              title={`Current theme: ${theme}. Click to change.`}
-            >
-              {theme === "light" && <span className="h-[1.2rem] w-[1.2rem]">☀️</span>}
-              {theme === "dark" && <span className="h-[1.2rem] w-[1.2rem]">🌙</span>}
-              {theme === "system" && <span className="h-[1.2rem] w-[1.2rem]">💻</span>}
-              <span className="sr-only">Toggle theme</span>
-            </button>
-            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
-              Log in
-            </button>
-            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3">
-              Sign up
-            </button>
-          </nav>
+        
+        <div className="flex flex-1 items-center justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              if (theme === "light") setTheme("dark")
+              else if (theme === "dark") setTheme("system")
+              else setTheme("light")
+            }}
+            title={`Current theme: ${theme}. Click to change.`}
+          >
+            {theme === "light" && <span>☀️</span>}
+            {theme === "dark" && <span>🌙</span>}
+            {theme === "system" && <span>💻</span>}
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+          
+          <Button variant="outline" size="sm">
+            Log in
+          </Button>
+          
+          <Button variant="primary" size="sm">
+            Sign up
+          </Button>
         </div>
       </div>
     </header>
@@ -726,28 +724,34 @@ function App() {
     window.history.pushState({ tab: 'compile' }, '', '/compile')
   }
   
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'music':
-        return <MusicTab onNavigateToCompile={handleNavigateToCompile} />
-      case 'artwork':
-        return <ArtworkTabSimple />
-      case 'compile':
-        return <CompileTab preselectedSongs={preselectedSongs} />
-      case 'publish':
-        return <PublishTab />
-      default:
-        return <MusicTab onNavigateToCompile={handleNavigateToCompile} />
+  const handleTabChange = (value: string | null) => {
+    if (value) {
+      setActiveTab(value)
+      // Update URL when tab changes
+      window.history.pushState({ tab: value }, '', `/${value === 'music' ? '' : value}`)
     }
   }
   
   return (
     <ThemeProvider>
       <div className="relative min-h-screen bg-background text-foreground">
-        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-        <main className="container py-6">
-          {renderTabContent()}
-        </main>
+        <Tabs.Root value={activeTab} onValueChange={handleTabChange}>
+          <Header activeTab={activeTab} onTabChange={handleTabChange} />
+          <main className="container py-6">
+            <Tabs.Content value="music" className="focus:outline-none">
+              <MusicTab onNavigateToCompile={handleNavigateToCompile} />
+            </Tabs.Content>
+            <Tabs.Content value="artwork" className="focus:outline-none">
+              <ArtworkTabSimple />
+            </Tabs.Content>
+            <Tabs.Content value="compile" className="focus:outline-none">
+              <CompileTab preselectedSongs={preselectedSongs} />
+            </Tabs.Content>
+            <Tabs.Content value="publish" className="focus:outline-none">
+              <PublishTab />
+            </Tabs.Content>
+          </main>
+        </Tabs.Root>
       </div>
     </ThemeProvider>
   )

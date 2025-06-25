@@ -57,3 +57,22 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* Base UI Tabs styles */
+@layer components {
+  /* Tab Content animations */
+  [role="tabpanel"] {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

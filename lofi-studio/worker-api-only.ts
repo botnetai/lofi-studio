@@ -463,31 +463,66 @@ app.delete('/api/songs/:id', async (c) => {
 // Generate artwork using Fal.ai
 app.post('/api/artwork', async (c) => {
   const body = await c.req.json()
-  const { prompt, style = 'lofi anime aesthetic, album cover art', numImages = 4, model = 'flux-schnell' } = body
+  const { 
+    prompt, 
+    style = 'lofi anime aesthetic, album cover art', 
+    numImages = 4, 
+    model = 'flux-kontext',
+    mode = 'text-to-image',
+    imageId
+  } = body
   
   // Map model names to Fal.ai endpoints
   const modelEndpoints = {
+    'flux-kontext': 'https://fal.run/fal-ai/flux-kontext',
     'flux-schnell': 'https://fal.run/fal-ai/flux/schnell',
     'flux-dev': 'https://fal.run/fal-ai/flux/dev',
     'flux-pro': 'https://fal.run/fal-ai/flux-pro',
     'stable-diffusion-xl': 'https://fal.run/fal-ai/stable-diffusion-xl'
   }
   
-  const endpoint = modelEndpoints[model] || modelEndpoints['flux-schnell']
+  const endpoint = modelEndpoints[model] || modelEndpoints['flux-kontext']
   
   try {
+    let requestBody: any = {
+      prompt: style ? `${prompt}, ${style}, high quality, detailed` : `${prompt}, high quality, detailed`,
+      image_size: 'square_hd',
+      num_images: numImages,
+      enable_safety_checker: true
+    }
+    
+    // Handle image-to-image mode
+    if (mode === 'image-to-image' && imageId) {
+      const sourceArtwork = await c.env.DB.prepare(
+        'SELECT * FROM artwork WHERE id = ?'
+      ).bind(imageId).first()
+      
+      if (!sourceArtwork) {
+        return c.json({ error: 'Source image not found' }, 404)
+      }
+      
+      // Get full URL for the source image
+      const origin = c.req.header('origin') || `https://${c.req.header('host')}`
+      const fullImageUrl = sourceArtwork.url.startsWith('http') 
+        ? sourceArtwork.url 
+        : `${origin}${sourceArtwork.url}`
+      
+      // For image-to-image, add the image URL
+      requestBody.image_url = fullImageUrl
+      
+      // Flux Kontext specific parameters for image-to-image
+      if (model === 'flux-kontext') {
+        requestBody.strength = 0.85 // How much to transform the image
+      }
+    }
+    
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Key ${c.env.FAL_KEY}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        prompt: `${prompt}, ${style}, high quality, detailed`,
-        image_size: 'square_hd',
-        num_images: numImages,
-        enable_safety_checker: true
-      })
+      body: JSON.stringify(requestBody)
     })
     
     if (!response.ok) {
@@ -557,7 +592,7 @@ app.post('/api/artwork', async (c) => {
         artworkId,
         `/files/${key}`,
         prompt,
-        JSON.stringify({ style, model, fal_url: image.url }),
+        JSON.stringify({ style, model, mode, sourceImageId: imageId, fal_url: image.url }),
         new Date().toISOString()
       ).run()
       
@@ -586,10 +621,11 @@ app.post('/api/video', async (c) => {
     seed = -1,
     cfgScale = 0.5,
     mode = 'standard',
-    tailImageId = null
+    tailImageId = null,
+    async = true // Allow sync generation for testing
   } = body
   
-  console.log('Video generation request:', { imageId, model, duration, mode })
+  console.log('Video generation request:', { imageId, model, duration, mode, async })
   
   try {
     // Get image URL
@@ -628,20 +664,30 @@ app.post('/api/video', async (c) => {
     
     console.log('Created video placeholder with ID:', videoId)
     
-    // Start async video generation
-    c.executionCtx.waitUntil(
-      generateVideoAsync(c, videoId, artwork, {
+    // Always do sync generation since async isn't working with waitUntil
+    try {
+      await generateVideoAsync(c, videoId, artwork, {
         imageId, prompt, model, enableLoop, duration, seed, cfgScale, mode, tailImageId
       })
-    )
-    
-    // Return immediately with the video ID
-    return c.json({ 
-      success: true, 
-      videoId,
-      status: 'generating',
-      message: 'Video generation started. Check back in 1-2 minutes.'
-    })
+      
+      return c.json({ 
+        success: true, 
+        videoId,
+        status: 'completed',
+        message: 'Video generated successfully!'
+      })
+    } catch (genError) {
+      console.error('Video generation failed:', genError)
+      
+      // The video entry exists but failed, so return the ID
+      return c.json({ 
+        success: false,
+        videoId,
+        status: 'failed',
+        error: genError.message,
+        message: 'Video generation failed. Please try again.'
+      })
+    }
   } catch (error) {
     console.error('Video generation error:', error)
     return c.json({ error: error.message }, 500)
@@ -656,6 +702,9 @@ async function generateVideoAsync(
   params: any
 ) {
   const { imageId, prompt, model, enableLoop, duration, seed, cfgScale, mode, tailImageId } = params
+  
+  console.log('generateVideoAsync started for video:', videoId)
+  console.log('Parameters:', { model, duration, mode })
   
   try {
     // Get full URL for the artwork
@@ -805,6 +854,7 @@ async function generateVideoAsync(
     
     const responseText = await response.text()
     console.log('Raw response:', responseText.substring(0, 1000))
+    console.log('Response status:', response.status)
     
     if (!response.ok) {
       console.error('Video generation failed:', responseText)
@@ -905,7 +955,6 @@ async function generateVideoAsync(
       throw new Error('No video URL found in response. Check logs for response structure.')
     }
     
-    const videoId = crypto.randomUUID()
     const key = `videos/${videoId}.mp4`
     
     // Download and save video
@@ -969,6 +1018,8 @@ async function generateVideoAsync(
     }
   } catch (error) {
     console.error('Video generation error:', error)
+    console.error('Error stack:', error.stack)
+    console.error('Error type:', error.constructor.name)
     
     // Update video status to failed
     try {
@@ -1236,6 +1287,104 @@ app.get('/api/albums/:albumId/songs', async (c) => {
   `).bind(albumId).all()
   
   return c.json(songs.results || [])
+})
+
+// Debug video generation
+app.get('/api/debug/video/:videoId', async (c) => {
+  const videoId = c.req.param('videoId')
+  
+  const video = await c.env.DB.prepare(
+    'SELECT * FROM videos WHERE id = ?'
+  ).bind(videoId).first()
+  
+  if (!video) {
+    return c.json({ error: 'Video not found' }, 404)
+  }
+  
+  return c.json({
+    video,
+    metadata: JSON.parse(video.metadata || '{}'),
+    age: Math.floor((Date.now() - new Date(video.created_at).getTime()) / 1000) + ' seconds'
+  })
+})
+
+// Test async video generation manually
+app.post('/api/test/generate-video-sync', async (c) => {
+  const body = await c.req.json()
+  const { videoId } = body
+  
+  try {
+    // Get video and artwork
+    const video = await c.env.DB.prepare(
+      'SELECT * FROM videos WHERE id = ?'
+    ).bind(videoId).first()
+    
+    if (!video) {
+      return c.json({ error: 'Video not found' }, 404)
+    }
+    
+    const artwork = await c.env.DB.prepare(
+      'SELECT * FROM artwork WHERE id = ?'
+    ).bind(video.artwork_id).first()
+    
+    if (!artwork) {
+      return c.json({ error: 'Artwork not found' }, 404)
+    }
+    
+    const metadata = JSON.parse(video.metadata || '{}')
+    
+    // Call the async function synchronously for testing
+    await generateVideoAsync(c, videoId, artwork, {
+      imageId: video.artwork_id,
+      prompt: metadata.prompt || '',
+      model: metadata.model || 'kling-2.1',
+      enableLoop: metadata.enableLoop || false,
+      duration: metadata.duration || 5,
+      seed: -1,
+      cfgScale: 0.5,
+      mode: metadata.mode || 'standard',
+      tailImageId: null
+    })
+    
+    return c.json({ success: true, message: 'Video generation completed' })
+  } catch (error) {
+    return c.json({ 
+      error: error.message, 
+      stack: error.stack,
+      type: error.constructor.name 
+    }, 500)
+  }
+})
+
+// Delete video
+app.delete('/api/videos/:id', async (c) => {
+  const id = c.req.param('id')
+  
+  try {
+    // Get video to find R2 key
+    const video = await c.env.DB.prepare('SELECT * FROM videos WHERE id = ?').bind(id).first()
+    if (!video) {
+      return c.json({ error: 'Video not found' }, 404)
+    }
+    
+    // Delete from R2 if it has a URL
+    if (video.url) {
+      const key = video.url.replace('/files/', '')
+      try {
+        await c.env.R2.delete(key)
+      } catch (error) {
+        console.error('Failed to delete video from R2:', error)
+      }
+    }
+    
+    // Delete from database
+    await c.env.DB.prepare('DELETE FROM videos WHERE id = ?').bind(id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Delete video error:', error)
+    return c.json({ error: error.message }, 500)
+  }
 })
 
 // YouTube OAuth2 endpoints
