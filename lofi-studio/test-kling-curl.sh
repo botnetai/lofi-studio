@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # Test Kling 1.6 with curl
-FAL_KEY="f5d1c93d-5364-4117-96f8-a33699e70eb0:4953396aac7b5bd14673003cea767c28"
+# Usage: FAL_KEY=your-key-here ./test-kling-curl.sh
+FAL_KEY="${FAL_KEY}"
+
+if [ -z "$FAL_KEY" ]; then
+  echo "Error: Please set FAL_KEY environment variable"
+  exit 1
+fi
 
 echo "Testing Kling 1.6 Standard Image-to-Video API with curl..."
 echo "================================================"

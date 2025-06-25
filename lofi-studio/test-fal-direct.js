@@ -1,5 +1,9 @@
 // Test Fal.ai API directly
-const FAL_KEY = 'f5d1c93d-5364-4117-96f8-a33699e70eb0:4953396aac7b5bd14673003cea767c28';
+const FAL_KEY = process.env.FAL_KEY;
+if (!FAL_KEY) {
+  console.error('Please set FAL_KEY environment variable');
+  process.exit(1);
+}
 
 async function testFalDirect() {
   try {

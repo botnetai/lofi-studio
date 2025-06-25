@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
 // Simple test for Kling 1.6 API
-// Usage: node test-kling-1.6.js
+// Usage: FAL_KEY=your-key-here node test-kling-1.6.js
 
-const FAL_KEY = 'f5d1c93d-5364-4117-96f8-a33699e70eb0:4953396aac7b5bd14673003cea767c28';
+const FAL_KEY = process.env.FAL_KEY;
+if (!FAL_KEY) {
+  console.error('Please set FAL_KEY environment variable');
+  process.exit(1);
+}
 
 async function testKling16() {
   const testImageUrl = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=640&h=640&fit=crop';

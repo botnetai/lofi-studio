@@ -1,7 +1,7 @@
 name = "lofi-studio"
 main = "worker-api-only.ts"
 compatibility_date = "2024-12-18"
-account_id = "599cb66ab5c235bb62eb59dc77ed2f42"
+account_id = "YOUR_ACCOUNT_ID"
 
 [site]
 bucket = "./dist"
@@ -13,13 +13,12 @@ bucket_name = "lofi-studio-storage"
 [[d1_databases]]
 binding = "DB"
 database_name = "lofi-studio-db"
-database_id = "8c943f5b-305d-4658-9212-83d587bc6670"
+database_id = "YOUR_DATABASE_ID"
 
 [ai]
 binding = "AI"
 
-# [vars]
-# Add your API keys as secrets using wrangler:
+# API Keys should be added as secrets using wrangler CLI:
 # wrangler secret put GOAPI_KEY
 # wrangler secret put UDIOAPI_KEY
 # wrangler secret put FAL_KEY

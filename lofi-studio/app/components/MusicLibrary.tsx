@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useMusicStore } from '../store/musicStore'
-import { Button } from './Button'
-import { Card } from './Card'
+import { Button } from './ui/Button'
+import { Card } from './ui/Card'
 import { Play, Pause, Download, Check } from 'lucide-react'
 import { clsx } from 'clsx'
 
