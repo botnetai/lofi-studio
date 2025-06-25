@@ -10,18 +10,23 @@ import { Checkbox } from './ui/Checkbox'
 import { useModelSchema } from '../hooks/useModelSchema'
 import { FAL_MODELS, FalModel } from '../lib/fal-model-discovery'
 
+// Debug log
+console.log('FAL_MODELS imported:', FAL_MODELS)
+
 interface DynamicGenerationFormProps {
   category: 'text-to-image' | 'image-to-image' | 'image-to-video' | 'text-to-video'
   onGenerate: (modelId: string, params: any) => Promise<void>
   selectedImage?: string | null
   allImages?: any[]
+  embedded?: boolean // If true, don't render the Card wrapper
 }
 
 export function DynamicGenerationForm({ 
   category, 
   onGenerate, 
   selectedImage,
-  allImages = []
+  allImages = [],
+  embedded = false
 }: DynamicGenerationFormProps) {
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [models, setModels] = useState<FalModel[]>([])
@@ -33,6 +38,7 @@ export function DynamicGenerationForm({
   // Load models for category
   useEffect(() => {
     const categoryModels = FAL_MODELS[category] || []
+    console.log('Loading models for category:', category, categoryModels)
     setModels(categoryModels)
     
     // Set default model
@@ -87,24 +93,17 @@ export function DynamicGenerationForm({
   const needsImageSelection = category === 'image-to-image' || category === 'image-to-video'
   const canGenerate = !needsImageSelection || selectedImage
   
-  return (
-    <Card className="p-6">
-      <h2 className="text-2xl font-bold mb-6">
-        {category === 'text-to-image' || category === 'image-to-image' 
-          ? 'Generate Image' 
-          : category === 'image-to-video' 
-          ? 'Generate Video'
-          : 'Generate'
-        }
-      </h2>
-      
-      <div className="space-y-4">
+  const formContent = (
+    <div className="space-y-4">
         {/* Model Selection */}
         <div>
-          <Label>AI Model</Label>
+          <Label>AI Model ({models.length} models available)</Label>
           <Select
             value={selectedModel}
-            onValueChange={setSelectedModel}
+            onValueChange={(value) => {
+              console.log('Model selected:', value)
+              setSelectedModel(value)
+            }}
             options={models.map(model => ({
               value: model.id,
               label: model.name,
@@ -112,6 +111,9 @@ export function DynamicGenerationForm({
             }))}
             className="w-full mt-1"
           />
+          {models.length === 0 && (
+            <p className="text-xs text-red-400 mt-1">No models loaded for category: {category}</p>
+          )}
         </div>
         
         {/* Image Selection for image-based generation */}
@@ -274,6 +276,24 @@ export function DynamicGenerationForm({
           )}
         </Button>
       </div>
+  )
+  
+  // If embedded, return just the form content, otherwise wrap in Card
+  if (embedded) {
+    return formContent
+  }
+  
+  return (
+    <Card className="p-6">
+      <h2 className="text-2xl font-bold mb-6">
+        {category === 'text-to-image' || category === 'image-to-image' 
+          ? 'Generate Image' 
+          : category === 'image-to-video' 
+          ? 'Generate Video'
+          : 'Generate'
+        }
+      </h2>
+      {formContent}
     </Card>
   )
 }

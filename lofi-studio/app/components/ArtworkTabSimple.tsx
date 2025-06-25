@@ -268,11 +268,14 @@ export function ArtworkTabSimple() {
       )}
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Image Generation Card - Mode Selector outside of DynamicGenerationForm */}
-        <div>
-          <Card className="p-6 mb-4">
+        {/* Image Generation Card */}
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold mb-6">Generate Image</h2>
+          
+          <div className="space-y-4">
+            {/* Mode Selector */}
             <div>
-              <Label>Image Generation Mode</Label>
+              <Label>Generation Mode</Label>
               <div className="flex gap-2 mt-1">
                 <Button
                   variant={imageMode === 'text-to-image' ? 'secondary' : 'outline'}
@@ -303,16 +306,17 @@ export function ArtworkTabSimple() {
                 </Button>
               </div>
             </div>
-          </Card>
-          
-          {/* Dynamic Generation Form */}
-          <DynamicGenerationForm
-            category={imageMode}
-            onGenerate={handleImageGenerate}
-            selectedImage={selectedImageForArtwork}
-            allImages={allArtwork}
-          />
-        </div>
+            
+            {/* Embed the form content without the card wrapper */}
+            <DynamicGenerationForm
+              category={imageMode}
+              onGenerate={handleImageGenerate}
+              selectedImage={selectedImageForArtwork}
+              allImages={allArtwork}
+              embedded={true}
+            />
+          </div>
+        </Card>
         
         {/* Video Generation Card */}
         <DynamicGenerationForm

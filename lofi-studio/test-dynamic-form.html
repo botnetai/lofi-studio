@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Dynamic Form</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .result {
+            background: #1a1a1a;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+        .info { border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body>
+    <h1>Test Dynamic Form Component</h1>
+    
+    <div class="test-section">
+        <h2>Test Dynamic Form Loading</h2>
+        <iframe 
+            src="http://localhost:5173" 
+            width="100%" 
+            height="800" 
+            style="border: 1px solid #333; border-radius: 8px;"
+        ></iframe>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Console</h2>
+        <button onclick="checkFalModels()">Check FAL_MODELS</button>
+        <button onclick="checkComponents()">Check React Components</button>
+        <div id="debug-results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const container = document.getElementById('debug-results');
+            const result = document.createElement('div');
+            result.className = `result ${type}`;
+            result.textContent = typeof message === 'object' ? JSON.stringify(message, null, 2) : message;
+            container.appendChild(result);
+        }
+        
+        async function checkFalModels() {
+            log('Checking FAL_MODELS module...', 'info');
+            
+            // Try to access the module through the iframe
+            const iframe = document.querySelector('iframe');
+            try {
+                // This won't work due to CORS, but we can see the error
+                const iframeWindow = iframe.contentWindow;
+                log('Iframe loaded', 'success');
+            } catch (error) {
+                log(`Expected CORS error: ${error.message}`, 'error');
+            }
+            
+            // Check if the module is being loaded
+            log('Open browser DevTools and check:', 'info');
+            log('1. Network tab - look for fal-model-discovery.ts', 'info');
+            log('2. Console tab - check for any errors', 'info');
+            log('3. Sources tab - verify the file is loaded', 'info');
+        }
+        
+        function checkComponents() {
+            log('Component checklist:', 'info');
+            log('1. DynamicGenerationForm should render', 'info');
+            log('2. Select dropdown should show AI Model label', 'info');
+            log('3. Models array should be populated from FAL_MODELS', 'info');
+            log('4. Console.log should show "Loading models for category:"', 'info');
+        }
+    </script>
+</body>
+</html>
