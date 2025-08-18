@@ -1,0 +1,10 @@
+node_modules/
+web/node_modules/
+.next/
+web/.next/
+dist/
+legacy/dist/
+.env
+web/.env
+.DS_Store
+web/bun.lock
