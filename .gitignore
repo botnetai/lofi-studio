@@ -8,3 +8,4 @@ legacy/dist/
 web/.env
 .DS_Store
 web/bun.lock
+.vercel

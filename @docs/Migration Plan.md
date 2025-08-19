@@ -1,68 +1,68 @@
 ## Migration Plan
 
 ### Purpose of the App
-- [ ] Enable users to create “Spaces” that combine generated audio (ElevenLabs) and visuals (Fal.ai image/video) into shareable, optionally public experiences.
-- [ ] Each Space has its own URL, configurable privacy (private/public), and an optional chat/trollbox that can be toggled per Space.
-- [ ] Two plans: Free (1 Space total, lifetime) and Pro (up to 10 Spaces). Stripe (web) and RevenueCat (mobile) power billing, subscriptions, and upgrades.
+- Enable users to create “Spaces” that combine generated audio (ElevenLabs) and visuals (Fal.ai image/video) into shareable, optionally public experiences.
+- Each Space has its own URL, configurable privacy (private/public), and an optional chat/trollbox that can be toggled per Space.
+- Two plans: Free (1 Space total, lifetime) and Pro (up to 10 Spaces). Stripe (web) and RevenueCat (mobile) power billing, subscriptions, and upgrades.
 
 ### Pages
 1. Explore - a feed of spaces created by the user or community
-2. Space - A Space is an entity owned by a user that plays media (songs, artwork, videos). It is inspired by the Lofi Girl youtube channel in which users can navigate to and put it on in the background.
+2. Space - A Space is an entity owned by a user that plays media (songs, images, videos). It is inspired by the Lofi Girl YouTube channel in which users can navigate to and put it on in the background.
 3. CRUD Space - form to generate and edit music, image, video, title, etc.
 4. Settings
 
 ### Spaces: Product Model
-- [ ] A Space is an entity owned by a user that aggregates media (songs, artwork, videos).
-- [ ] Each Space includes:
-  - [ ] `visibility`: `private` or `public`.
-  - [ ] `slug` for shareable URL at `/space/[slug]`.
-  - [ ] `chat_enabled`: toggle for chat/trollbox.
-  - [ ] `songs`: ordered list of generated tracks that belong to the Space.
-  - [ ] `background`: a single static image or looping video associated with the Space.
-- [ ] Free plan: 1 Space total (lifetime). Pro plan: up to 10 Spaces total.
+- A Space is an entity owned by a user that aggregates media (songs, images, videos).
+- Each Space includes:
+  - `visibility`: `private` or `public`.
+  - `slug` for shareable URL at `/space/[slug]`.
+  - `chat_enabled`: toggle for chat/trollbox.
+  - `songs`: ordered list of generated tracks that belong to the Space.
+  - `background`: a single static image or looping video associated with the Space.
+- Free plan: 1 Space total (lifetime). Pro plan: up to 10 Spaces total.
 
 ### Context and Goals
-- [ ] Replace legacy with a modern, scalable app.
-- [ ] Centralize music generation on ElevenLabs; keep Fal.ai for image/video.
-- [ ] Deliver a production-ready web app with auth, storage, typed APIs, robust UX, and observability.
-- [ ] We have no existing users/data to preserve; legacy code and schemas can be discarded.
+- Replace legacy with a modern, scalable app.
+- Centralize music generation on ElevenLabs; keep Fal.ai for image/video.
+- Deliver a production-ready web app with auth, storage, typed APIs, robust UX, and observability.
+- We have no existing users/data to preserve; legacy code and schemas can be discarded.
 
 ### Target Stack Recap
-- [ ] **Web**: Next.js (App Router), TypeScript, Tailwind v4, shadcn/ui, TanStack Query, tRPC. Local dev may use Bun.
-- [ ] **Mobile**: Expo (React Native), Expo Router, TypeScript, TanStack Query, `expo-av` for media.
-- [ ] **Auth/DB**: Supabase (Auth + Postgres, RLS + Policies).
-- [ ] **Storage**: Cloudflare R2 S3-compatible (music/images/videos), public objects with unguessable keys (no presign/CDN for MVP)
-- [ ] **Generation**: ElevenLabs (music), Fal.ai (image/video).
-- [ ] **Platform/Email/Payments**: Vercel, Resend, Stripe (web), RevenueCat (mobile).
+- **Web**: Next.js (App Router), TypeScript, Tailwind v4, shadcn/ui, TanStack Query, tRPC. Local dev may use Bun.
+- **Mobile**: Expo (React Native), Expo Router, TypeScript, TanStack Query, `expo-av` for media.
+- **Auth/DB**: Supabase (Auth + Postgres, RLS + Policies).
+- **Storage**: Cloudflare R2 S3-compatible (music/images/videos), public objects with unguessable keys (no presign/CDN for MVP)
+- **Generation**: ElevenLabs (music), Fal.ai (image/video).
+- **Platform/Email/Payments**: Vercel, Resend, Stripe (web), RevenueCat (mobile).
 
-- [ ] Next.js serves UI and tRPC route handlers (server-only code remains on server).
-- [ ] tRPC server integrates providers (ElevenLabs/Fal.ai) and persists results in Supabase and R2.
-- [ ] Server polls providers for job status and writes final media to R2 (provider webhooks deferred to Hardening).
-- [ ] RLS ensures users only access their own rows.
-- [ ] Media is delivered via public R2 objects with unguessable keys (no presign/CDN for MVP).
+- Next.js serves UI and tRPC route handlers (server-only code remains on server).
+- tRPC server integrates providers (ElevenLabs/Fal.ai) and persists results in Supabase and R2.
+- Server polls providers for job status and writes final media to R2 (provider webhooks deferred to Hardening).
+- RLS ensures users only access their own rows.
+- Media is delivered via public R2 objects with unguessable keys (no presign/CDN for MVP).
 
 ### Spaces: Product Model
-- [ ] A Space is an entity owned by a user that plays media (songs, artwork, videos). It is inspired by the Lofi Girl youtube channel in which users can navigate to and put it on in the background.
-- [ ] Free plan: 1 Space total (lifetime). Pro plan: up to 10 Spaces total.
-- [ ] Each Space includes:
-  - [ ] `visibility`: `private` or `public`.
-  - [ ] `name`
-  - [ ] `slug` for shareable URL at `/space/[slug]`.
-  - [ ] `chat_enabled`: toggle for chat/trollbox.
-  - [ ] `songs`: background music generated by ElevenLabs
-  - [ ] `background`: a single static image or looping video associated with the Space
+- A Space is an entity owned by a user that plays media (songs, images, videos). It is inspired by the Lofi Girl youtube channel in which users can navigate to and put it on in the background.
+- Free plan: 1 Space total (lifetime). Pro plan: up to 10 Spaces total.
+- Each Space includes:
+  - `visibility`: `private` or `public`.
+  - `name`
+  - `slug` for shareable URL at `/space/[slug]`.
+  - `chat_enabled`: toggle for chat/trollbox.
+  - `songs`: background music generated by ElevenLabs
+  - `background`: exactly one background, which can be an image or a looping video
 
 
 ### Sound Effects (SFX) Overlays
-- [ ] Purpose: allow users to layer ambient loops (e.g., rain, storm, crackling fire) over generated background music.
-- [ ] Client-first mixing (MVP):
-  - [ ] Web: Web Audio API mixes base music + one or more looping SFX with independent volume sliders.
-  - [ ] Mobile (Expo): `expo-av` plays base track + looping SFX in sync; volume sliders; handle iOS/Android playback quirks.
-- [ ] Persistence:
-  - [ ] Store selected SFX for a Space as rows (`space_sfx`) or embed in `spaces` metadata.
-  - [ ] Effects catalog (`sfx_effects`) keeps R2 keys and defaults.
-- [ ] Optional pre-mix (export-ready):
-  - [ ] Server-side mix variants using ffmpeg or a hosted audio service (deferred); writes pre-mixed audio to R2 for sharing/exports and later video compilations.
+- Purpose: allow users to layer ambient loops (e.g., rain, storm, crackling fire) over generated background music.
+- Client-first mixing (MVP):
+  - Web: Web Audio API mixes base music + one or more looping SFX with independent volume sliders.
+  - Mobile (Expo): `expo-av` plays base track + looping SFX in sync; volume sliders; handle iOS/Android playback quirks.
+- Persistence:
+  - Store selected SFX for a Space as rows (`space_sfx`) or embed in `spaces` metadata.
+  - Effects catalog (`sfx_effects`) keeps R2 keys and defaults.
+- Optional pre-mix (export-ready):
+  - Server-side mix variants using ffmpeg or a hosted audio service (deferred); writes pre-mixed audio to R2 for sharing/exports and later video compilations.
 
 ## Database Schema (Supabase)
 
@@ -191,39 +191,59 @@ drop trigger if exists trg_user_subs_updated_at on public.user_subscriptions;
 create trigger trg_user_subs_updated_at before update on public.user_subscriptions for each row execute function public.set_updated_at();
 
 -- RLS policies (examples)
+-- Enable RLS (safe to re-run)
+alter table public.spaces enable row level security;
 alter table public.songs enable row level security;
-create policy if not exists songs_select_own_or_public_space on public.songs
+alter table public.artwork enable row level security;
+alter table public.videos enable row level security;
+alter table public.space_messages enable row level security;
+alter table public.user_subscriptions enable row level security;
+
+-- Drop existing policies (safe if they don't exist)
+drop policy if exists spaces_select_public_or_own on public.spaces;
+drop policy if exists spaces_modify_own on public.spaces;
+drop policy if exists songs_select_own_or_public_space on public.songs;
+drop policy if exists songs_modify_own on public.songs;
+drop policy if exists artwork_select_own on public.artwork;
+drop policy if exists artwork_modify_own on public.artwork;
+drop policy if exists videos_select_own on public.videos;
+drop policy if exists videos_modify_own on public.videos;
+drop policy if exists space_messages_select_public_or_own on public.space_messages;
+drop policy if exists space_messages_insert_own_space on public.space_messages;
+drop policy if exists space_messages_delete_own on public.space_messages;
+drop policy if exists user_subscriptions_own on public.user_subscriptions;
+
+-- Recreate policies
+create policy spaces_select_public_or_own on public.spaces
+  for select using (visibility = 'public' or user_id = auth.uid());
+
+create policy spaces_modify_own on public.spaces
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy songs_select_own_or_public_space on public.songs
   for select using (
     user_id = auth.uid() or exists (
       select 1 from public.spaces s
       where s.id = songs.space_id and s.visibility = 'public'
     )
   );
-create policy if not exists songs_modify_own on public.songs
+
+create policy songs_modify_own on public.songs
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
-alter table public.artwork enable row level security;
-create policy if not exists artwork_select_own on public.artwork for select using (user_id = auth.uid());
-create policy if not exists artwork_modify_own on public.artwork for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy artwork_select_own on public.artwork
+  for select using (user_id = auth.uid());
 
-alter table public.videos enable row level security;
-create policy if not exists videos_select_own on public.videos for select using (user_id = auth.uid());
-create policy if not exists videos_modify_own on public.videos for all using (user_id = auth.uid()) with check (user_id = auth.uid());
-
-alter table public.spaces enable row level security;
-create policy if not exists spaces_select_public_or_own on public.spaces
-  for select using (visibility = 'public' or user_id = auth.uid());
-create policy if not exists spaces_modify_own on public.spaces
+create policy artwork_modify_own on public.artwork
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
--- (Removed) space_songs RLS; songs are directly scoped to spaces
+create policy videos_select_own on public.videos
+  for select using (user_id = auth.uid());
 
-alter table public.user_subscriptions enable row level security;
-create policy if not exists user_subscriptions_own on public.user_subscriptions
+create policy videos_modify_own on public.videos
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 
-alter table public.space_messages enable row level security;
-create policy if not exists space_messages_select_public_or_own on public.space_messages
+create policy space_messages_select_public_or_own on public.space_messages
   for select using (
     exists (
       select 1 from public.spaces s
@@ -231,7 +251,8 @@ create policy if not exists space_messages_select_public_or_own on public.space_
         and (s.visibility = 'public' or s.user_id = auth.uid())
     )
   );
-create policy if not exists space_messages_insert_own_space on public.space_messages
+
+create policy space_messages_insert_own_space on public.space_messages
   for insert with check (
     exists (
       select 1 from public.spaces s
@@ -239,8 +260,12 @@ create policy if not exists space_messages_insert_own_space on public.space_mess
         and s.user_id = auth.uid()
     )
   );
-create policy if not exists space_messages_delete_own on public.space_messages
+
+create policy space_messages_delete_own on public.space_messages
   for delete using (user_id = auth.uid());
+
+create policy user_subscriptions_own on public.user_subscriptions
+  for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 ```
 
 ### Music Flow (step-by-step)
@@ -252,78 +277,78 @@ create policy if not exists space_messages_delete_own on public.space_messages
 ---
 
 ## Build & Deployment
-- [ ] Dev tooling:
-  - [ ] Scripts (pnpm/npm; Bun optional locally): `dev`, `build`, `start`, `typecheck`, `lint`, `test`.
-  - [ ] TypeScript strict, ESLint + Prettier, shadcn/ui, Tailwind v4, tsconfig path aliases.
-  - [ ] `.env.example` covering all secrets and public keys.
-- [ ] Configuration & Environment Variables:
-  - [ ] Runtime: Vercel Node.js 20; do not use Bun on Vercel.
-  - [ ] Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-  - [ ] R2 S3: `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_S3_ENDPOINT`
-  - [ ] Providers: `ELEVENLABS_API_KEY`, `FAL_KEY`
-  - [ ] Stripe (web): `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
-  - [ ] RevenueCat (mobile): `REVENUECAT_WEBHOOK_SECRET`
-  - [ ] Email: `RESEND_API_KEY`
-  - [ ] App: `APP_ORIGIN`
-  - [ ] Expo: `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_REVENUECAT_API_KEY`, deep link scheme in `app.json`
+- Dev tooling:
+  - Scripts (pnpm/npm; Bun optional locally): `dev`, `build`, `start`, `typecheck`, `lint`, `test`.
+  - TypeScript strict, ESLint + Prettier, shadcn/ui, Tailwind v4, tsconfig path aliases.
+  - `.env.example` covering all secrets and public keys.
+- Configuration & Environment Variables:
+  - Runtime: Vercel Node.js 20; do not use Bun on Vercel.
+  - Supabase: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+  - R2 S3: `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_S3_ENDPOINT`
+  - Providers: `ELEVENLABS_API_KEY`, `FAL_KEY`
+  - Stripe (web): `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
+  - RevenueCat (mobile): `REVENUECAT_WEBHOOK_SECRET`
+  - Email: `RESEND_API_KEY`
+  - App: `APP_ORIGIN`
+  - Expo: `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_REVENUECAT_API_KEY`, deep link scheme in `app.json`
 
 ---
 
 ## CI/CD
-- [ ] Vercel Git integration for preview deployments.
-- [ ] Optional GitHub Actions: install → lint → typecheck → test → build.
-- [ ] Required checks on PRs (types + lint + build).
+- Vercel Git integration for preview deployments.
+- Optional GitHub Actions: install → lint → typecheck → test → build.
+- Required checks on PRs (types + lint + build).
 
-- [ ] Vercel runtime/build specifics:
-  - [ ] Use Node.js 20 (set `"engines": { "node": "20.x" }` in `package.json`).
-  - [ ] Use `pnpm` or `npm` for `installCommand`/`buildCommand` (no Bun on Vercel).
-  - [ ] Ensure Next.js route handlers that need SDKs (tRPC, S3) use the Node.js runtime (not Edge).
+- Vercel runtime/build specifics:
+  - Use Node.js 20 (set `"engines": { "node": "20.x" }` in `package.json`).
+  - Use `pnpm` or `npm` for `installCommand`/`buildCommand` (no Bun on Vercel).
+  - Ensure Next.js route handlers that need SDKs (tRPC, S3) use the Node.js runtime (not Edge).
 
-- [ ] Expo mobile:
-  - [ ] EAS Build for iOS/Android distributions; EAS Update for OTA UI fixes.
-  - [ ] Use development builds for local iteration; avoid Expo Go for production features.
+- Expo mobile:
+  - EAS Build for iOS/Android distributions; EAS Update for OTA UI fixes.
+  - Use development builds for local iteration; avoid Expo Go for production features.
 
 
 ---
 
 ## Cost/Quotas
-- [ ] Rate-limit `music.create` per user and globally.
-- [ ] Budget guardrails for ElevenLabs + Fal.ai (daily caps via env).
-- [ ] R2 lifecycle rules to age out temp files; optional cold storage.
+- Rate-limit `music.create` per user and globally.
+- Budget guardrails for ElevenLabs + Fal.ai (daily caps via env).
+- R2 lifecycle rules to age out temp files; optional cold storage.
 
 ---
 
 ## Security
-- [ ] Secrets only server-side; never expose provider keys in client.
-- [ ] Webhook signature verification and idempotent updates for billing (Stripe/RevenueCat) (store last event id/hash).
-- [ ] RLS policies on all tables for select/insert/update/delete.
-- [ ] Private R2 with presigned URLs if privacy required; otherwise public R2 with unguessable keys.
+- Secrets only server-side; never expose provider keys in client.
+- Webhook signature verification and idempotent updates for billing (Stripe/RevenueCat) (store last event id/hash).
+- RLS policies on all tables for select/insert/update/delete.
+- Private R2 with presigned URLs if privacy required; otherwise public R2 with unguessable keys.
 
 ---
 
 ## Testing
-- [ ] Unit tests for `server/lib/{elevenlabs,fal,r2}` with provider mocks.
-- [ ] Integration tests for tRPC routers (mock Supabase or use test schema).
-- [ ] Contract tests for billing webhooks (Stripe/RevenueCat), optional provider webhook tests deferred to Hardening.
-- [ ] Playwright E2E: generate → complete → play audio → delete; error cases.
+- Unit tests for `server/lib/{elevenlabs,fal,r2}` with provider mocks.
+- Integration tests for tRPC routers (mock Supabase or use test schema).
+- Contract tests for billing webhooks (Stripe/RevenueCat), optional provider webhook tests deferred to Hardening.
+- Playwright E2E: generate → complete → play audio → delete; error cases.
 
 ---
 
 ## tRPC Router Signatures (Reference)
-- [ ] music:
+- music:
   - `create(input: { spaceId: string; prompt: string; title?: string; style?: string; makeInstrumental?: boolean })`
   - `status(input: { id?: string; generationId?: string })`
   - `list(input: { cursor?: string; limit?: number; status?: string })`
   - `delete(input: { id: string })`
-- [ ] artwork:
+- artwork:
   - `create(input: { prompt: string; model?: string })`
   - `list(input: { cursor?: string; limit?: number })`
   - `delete(input: { id: string })`
-- [ ] video:
+- video:
   - `create(input: { artworkId: string; prompt?: string; model?: string; duration?: number; mode?: string })`
   - `list(input: { cursor?: string; limit?: number })`
   - `delete(input: { id: string })`
-- [ ] spaces:
+- spaces:
   - `create(input: { name: string; slug?: string; visibility?: 'private'|'public'; chatEnabled?: boolean; backgroundArtworkId?: string; backgroundVideoId?: string; description?: string })`
   - `update(input: { id: string; name?: string; visibility?: 'private'|'public'; chatEnabled?: boolean; backgroundArtworkId?: string; backgroundVideoId?: string; description?: string })`
   - `delete(input: { id: string })`
@@ -331,10 +356,10 @@ create policy if not exists space_messages_delete_own on public.space_messages
   - `getBySlug(input: { slug: string })`
   - `setBackground(input: { spaceId: string; backgroundArtworkId?: string; backgroundVideoId?: string })`
   - `reorderSongs(input: { spaceId: string; songIdsInOrder: string[] })`
-- [ ] spaceMessages:
+- spaceMessages:
   - `list(input: { spaceId: string; cursor?: string; limit?: number })`
   - `post(input: { spaceId: string; message: string })`
-- [ ] billing (web):
+- billing (web):
   - `createCheckoutSession(input: { plan: 'pro_monthly'|'pro_yearly'; successUrl?: string; cancelUrl?: string })`
   - `createPortalSession()`
   - `getSubscription()`
@@ -401,45 +426,45 @@ lib/
 Check off the boxes as you proceed to complete each task.
 
 ### Phase 0: Bootstrap (Dev Env Ready)
-- [ ] Remove Cloudflare Worker code and D1 schemas.
-- [ ] Remove Worker-based UI and scripts.
-- [ ] Delete Suno/Udio/Musikai configs.
-- [ ] Initialize Next.js (App Router) with TypeScript (local dev may use Bun).
-- [ ] Add Tailwind v4; install shadcn/ui; generate Button/Input/Card/Toast.
-- [ ] Install tRPC server + client; create `app/api/trpc/[trpc]/route.ts` and base `routers/index.ts`.
-- [ ] Install TanStack Query; set provider in `app/layout.tsx`; SSR hydration.
-- [ ] Add `.env.example` (Supabase, R2, ElevenLabs, Fal, Resend, Stripe, APP_ORIGIN).
-- [ ] Add ESLint/Prettier configs; TS strict; pre-commit hooks (optional).
+- [x] Remove Cloudflare Worker code and D1 schemas.
+- [x] Remove Worker-based UI and scripts.
+- [x] Delete Suno/Udio/Musikai configs.
+- [x] Initialize Next.js (App Router) with TypeScript (local dev may use Bun).
+- [ ] Add Tailwind v4; install shadcn/ui; generate Button/Input/Card/Toast. (Tailwind + shadcn init + Button done; Input/Card pending; Toast replaced by Sonner per shadcn)
+- [x] Install tRPC server + client; create `app/api/trpc/[trpc]/route.ts` and base `routers/index.ts`.
+- [x] Install TanStack Query; set provider in `app/layout.tsx`; SSR hydration.
+- [x] Add `.env.example` (Supabase, R2, ElevenLabs, Fal, Resend, Stripe, APP_ORIGIN).
+- [x] Add ESLint/Prettier configs; TS strict; pre-commit hooks (optional).
 
 Acceptance Criteria
-- [ ] app runs (`pnpm dev`/`npm run dev`), health route, baseline UI. (`bun dev` optional for local only.)
+- [x] app runs (`pnpm dev`/`npm run dev`), health route, baseline UI. (`bun dev` optional for local only.)
 
 ### Phase 1: Auth & DB (Supabase)
-- [ ] Supabase setup:
-  - [ ] Install SDK; add server helpers (`server/lib/supabase.ts`) and client helpers; wire auth UI (sign in/out).
-  - [ ] Configure env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-  - [ ] Add tRPC context to include authenticated user.
-- [ ] Schema creation (run as migration):
-  - [ ] Tables: `spaces`, `songs` (with `space_id` and `position`), `artwork`, `videos`, `space_messages`, `user_subscriptions`.
-  - [ ] Indexes: `idx_spaces_user_created`, `idx_songs_user_created`, `idx_songs_space_pos`, `uidx_songs_space_position`, `idx_artwork_user_created`, `idx_videos_user_created`, `idx_space_messages_space_created`.
-  - [ ] Triggers: `set_updated_at()` for `songs`, `spaces`, `user_subscriptions`.
-  - [ ] Constraints: single background check on `spaces` to ensure only one of `background_artwork_id` or `background_video_id` is set.
-- [ ] RLS policies:
-  - [ ] `spaces`: select public or own; modify own.
-  - [ ] `songs`: select own or songs in public spaces; modify own.
-  - [ ] `artwork`/`videos`: select/modify own.
-  - [ ] `space_messages`: select for public/own spaces; insert/delete own.
+- [x] Supabase setup:
+  - [x] Install SDK; add server helpers (`server/lib/supabase.ts`) and client helpers; wire auth UI (sign in/out).
+  - [x] Configure env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+  - [x] Add tRPC context to include authenticated user.
+- [x] Schema creation (run as migration):
+  - [x] Tables: `spaces`, `songs` (with `space_id` and `position`), `artwork`, `videos`, `space_messages`, `user_subscriptions`.
+  - [x] Indexes: `idx_spaces_user_created`, `idx_songs_user_created`, `idx_songs_space_pos`, `uidx_songs_space_position`, `idx_artwork_user_created`, `idx_videos_user_created`, `idx_space_messages_space_created`.
+  - [x] Triggers: `set_updated_at()` for `songs`, `spaces`, `user_subscriptions`.
+  - [x] Constraints: single background check on `spaces` to ensure only one of `background_artwork_id` or `background_video_id` is set.
+- [x] RLS policies:
+  - [x] `spaces`: select public or own; modify own.
+  - [x] `songs`: select own or songs in public spaces; modify own.
+  - [x] `artwork`/`videos`: select/modify own.
+  - [x] `space_messages`: select for public/own spaces; insert/delete own.
 - [ ] Seed (optional):
   - [ ] Seed one demo user (local only), one space, and a couple of placeholder rows for songs/artwork to exercise UI.
 
 Acceptance Criteria
-- [ ] Able to sign up/sign in/out; session persists and is available in tRPC context.
-- [ ] Migrations apply cleanly on a fresh database and are idempotent.
-- [ ] RLS blocks cross-user access: User A cannot read/modify User B rows.
-- [ ] Public spaces are selectable by other users; private spaces are not.
-- [ ] `songs` are required to have a `space_id` and are ordered by `position` within a space.
-- [ ] `spaces` enforce single background (image XOR video) via constraint.
-- [ ] All listed indexes and triggers exist; simple queries use the expected indexes.
+- [x] Able to sign up/sign in/out; session persists and is available in tRPC context.
+- [x] Migrations apply cleanly on a fresh database and are idempotent.
+- [x] RLS blocks cross-user access: User A cannot read/modify User B rows.
+- [x] Public spaces are selectable by other users; private spaces are not.
+- [x] `songs` are required to have a `space_id` and are ordered by `position` within a space.
+- [x] `spaces` enforce single background (image XOR video) via constraint.
+- [x] All listed indexes and triggers exist; simple queries use the expected indexes.
 
 ### Phase 2: Space Model
 - [ ] Spaces CRUD:
