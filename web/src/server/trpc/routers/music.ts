@@ -40,10 +40,11 @@ export const musicRouter = router({
     }),
 
   list: publicProcedure
-    .input(z.object({ cursor: z.string().optional(), limit: z.number().min(1).max(100).optional(), status: z.string().optional() }).optional())
+    .input(z.object({ cursor: z.string().optional(), limit: z.number().min(1).max(100).optional(), status: z.string().optional(), spaceId: z.string().uuid().optional() }).optional())
     .query(async ({ ctx, input }) => {
       let q = ctx.supabase.from('songs').select('*').order('created_at', { ascending: false }).limit(input?.limit ?? 20);
       if (input?.status) q = q.eq('status', input.status);
+      if (input?.spaceId) q = q.eq('space_id', input.spaceId);
       const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
