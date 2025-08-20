@@ -7,6 +7,7 @@ import { authRouter } from './auth';
 import { musicRouter } from './music';
 import { artworkRouter } from './artwork';
 import { videoRouter } from './video';
+import { modelsRouter } from './models';
 
 export const appRouter = router({
 	health: healthRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
 	music: musicRouter,
 	artwork: artworkRouter,
 	video: videoRouter,
+	models: modelsRouter,
 });
 
 export type AppRouter = typeof appRouter;

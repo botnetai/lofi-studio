@@ -2,12 +2,17 @@
 import { trpc } from '@/lib/trpcClient';
 import { useState } from 'react';
 import { T2V_MODELS, I2V_MODELS, getDefaultModelId } from '@/lib/falModels';
+import { DynamicModelForm } from '@/components/DynamicModelForm';
 
 export default function VideoPage() {
   const [prompt, setPrompt] = useState('cozy lofi loop, light movement');
   const [artworkId, setArtworkId] = useState('');
   const isImg2Vid = !!artworkId;
   const [model, setModel] = useState(getDefaultModelId('text2video') || 'fal-ai/kling-2.1');
+  const schema = trpc.models.get.useQuery({ id: model }, { staleTime: 60_000 });
+  const [formValues, setFormValues] = useState<Record<string, any>>({ prompt });
+  
+  useEffect(() => setFormValues((v) => ({ ...v, prompt })), [prompt]);
   const create = trpc.video.create.useMutation();
   const artwork = trpc.artwork.list.useQuery({});
   const { data, isLoading, refetch } = trpc.video.list.useQuery({}, { refetchInterval: 7000 });
@@ -18,7 +23,14 @@ export default function VideoPage() {
         className="space-y-3"
         onSubmit={async (e) => {
           e.preventDefault();
-          await create.mutateAsync({ prompt, artworkId: artworkId || undefined, model });
+          const payload: any = { prompt: formValues.prompt || prompt };
+          if (schema.data) {
+            for (const f of schema.data.fields) {
+              const val = formValues[f.key];
+              if (val !== undefined && f.key !== 'prompt') payload[f.key] = val;
+            }
+          }
+          await create.mutateAsync({ prompt: payload.prompt, duration: payload.duration, mode: payload.mode, artworkId: artworkId || undefined, model });
           refetch();
         }}
       >
@@ -38,6 +50,7 @@ export default function VideoPage() {
             <option key={m.label} value={m.id} disabled={m.disabled}>{m.label}</option>
           ))}
         </select>
+        {schema.data && <DynamicModelForm fields={schema.data.fields} values={formValues} onChange={setFormValues} />}
         <input className="w-full border rounded px-3 py-2" placeholder="Prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} />
         <button className="bg-black text-white px-4 py-2 rounded" disabled={create.isPending}>
           {create.isPending ? 'Generating…' : 'Generate'}

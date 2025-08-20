@@ -29,3 +29,69 @@ export function getDefaultModelId(type: FalModelType): string | undefined {
   return group.find((m) => m.recommended && !m.disabled)?.id || group.find((m) => !m.disabled)?.id;
 }
 
+// Dynamic form field schema
+export type FieldType = 'text' | 'number' | 'boolean' | 'select';
+export interface ModelField {
+  key: string;
+  label: string;
+  type: FieldType;
+  required?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: { value: string; label: string }[];
+  default?: string | number | boolean;
+}
+
+export interface ModelSchema extends FalModelOption {
+  fields: ModelField[];
+}
+
+export const IMAGE_MODEL_SCHEMAS: ModelSchema[] = [
+  {
+    id: 'fal-ai/flux-pro',
+    label: 'FLUX Pro (Image)',
+    type: 'image',
+    recommended: true,
+    fields: [
+      { key: 'prompt', label: 'Prompt', type: 'text', required: true },
+    ],
+  },
+];
+
+export const T2V_MODEL_SCHEMAS: ModelSchema[] = [
+  {
+    id: 'fal-ai/kling-2.1',
+    label: 'Kling 2.1 (Text → Video)',
+    type: 'text2video',
+    recommended: true,
+    fields: [
+      { key: 'prompt', label: 'Prompt', type: 'text', required: true },
+      { key: 'duration', label: 'Duration (s)', type: 'number', min: 2, max: 8, step: 1, default: 6 },
+      { key: 'mode', label: 'Mode', type: 'select', options: [
+        { value: 'motion', label: 'Motion' },
+        { value: 'portrait', label: 'Portrait' },
+        { value: 'landscape', label: 'Landscape' },
+      ], default: 'motion' },
+    ],
+  },
+];
+
+export const I2V_MODEL_SCHEMAS: ModelSchema[] = [
+  {
+    id: 'fal-ai/kling-2.1',
+    label: 'Kling 2.1 (Image → Video)',
+    type: 'img2video',
+    recommended: true,
+    fields: [
+      { key: 'prompt', label: 'Prompt (optional)', type: 'text', required: false },
+      { key: 'duration', label: 'Duration (s)', type: 'number', min: 2, max: 8, step: 1, default: 6 },
+      { key: 'mode', label: 'Mode', type: 'select', options: [
+        { value: 'motion', label: 'Motion' },
+        { value: 'portrait', label: 'Portrait' },
+        { value: 'landscape', label: 'Landscape' },
+      ], default: 'motion' },
+    ],
+  },
+];
+
