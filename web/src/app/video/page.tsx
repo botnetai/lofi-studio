@@ -1,7 +1,7 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
 import { useState } from 'react';
-import { T2V_MODELS, I2V_MODELS, getDefaultModelId } from '@/server/lib/falModels';
+import { T2V_MODELS, I2V_MODELS, getDefaultModelId } from '@/lib/falModels';
 
 export default function VideoPage() {
   const [prompt, setPrompt] = useState('cozy lofi loop, light movement');

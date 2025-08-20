@@ -1,7 +1,7 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
 import { useState } from 'react';
-import { IMAGE_MODELS, getDefaultModelId } from '@/server/lib/falModels';
+import { IMAGE_MODELS, getDefaultModelId } from '@/lib/falModels';
 
 export default function ArtworkPage() {
   const [prompt, setPrompt] = useState('cozy room at night, window, rain');
