@@ -10,12 +10,18 @@ export default function SpacesPage() {
       <h1 className="text-2xl font-semibold">Your Spaces</h1>
       {isLoading && <div>Loading…</div>}
       {error && <div className="text-red-600 text-sm">{error.message}</div>}
+      <div>
+        <Link href="/spaces/new" className="underline">New Space</Link>
+      </div>
       <ul className="space-y-3">
         {data?.map((s) => (
           <li key={s.id} className="border rounded p-3">
             <div className="font-medium">{s.name}</div>
             <div className="text-xs text-neutral-500">/{s.slug}</div>
-            <Link className="underline text-sm" href={`/space/${s.slug}`}>Open</Link>
+            <div className="space-x-3 mt-1">
+              <Link className="underline text-sm" href={`/space/${s.slug}`}>Open</Link>
+              <Link className="underline text-sm" href={`/space/${s.slug}/manage`}>Manage</Link>
+            </div>
           </li>
         ))}
       </ul>
