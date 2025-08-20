@@ -516,17 +516,21 @@ Acceptance Criteria
 - [x] Deleting a song removes the DB row and its R2 object.
 
 ### Phase 4: Fal.ai (Background Artwork Generation and Storage)
-- [ ] Implement `server/lib/fal.ts` (queue calls, polling helpers, parse outputs).
-- [ ] Routers `artwork` and `video`: `create`, `list`, `delete`; persist to R2.
-- [ ] `/artwork` form (model select), gallery grid; delete.
-- [ ] `/video` form (select artwork, duration/model, mode), list with thumbnails.
-- [ ] Deliverables: image/video E2E working with persistence and UI.
+- [x] Implement `server/lib/fal.ts` (queue calls, polling helpers, parse outputs).
+- [x] Routers `artwork` and `video`: `create`, `list`, `delete`; persist to R2.
+- [x] Model selection:
+  - [x] Add model catalog with defaults (FLUX Pro, Kling 2.1; WAN placeholders pending exact IDs).
+  - [x] `/artwork`: model dropdown for image generation.
+  - [x] `/video`: model dropdown for text→video and image→video (auto-switches based on artwork selection).
+- [x] `/artwork` form (model select), gallery grid; delete.
+- [x] `/video` form (select artwork, duration/model, mode), list with thumbnails.
+- [x] Deliverables: image/video E2E working with persistence and UI.
 
 Acceptance Criteria
-- [ ] Users can generate artwork and videos via Fal.ai; rows are created and updated with statuses.
-- [ ] Generated media is stored in R2 with working public URLs.
-- [ ] Users can view their own artwork/video lists and delete their own items.
-- [ ] A space can successfully set either an image or a video as its background from the generated media.
+- [x] Users can generate artwork and videos via Fal.ai; rows are created and updated with statuses.
+- [x] Generated media is stored in R2 with working public URLs.
+- [x] Users can view their own artwork/video lists and delete their own items.
+- [x] A space can successfully set either an image or a video as its background from the generated media.
 
 ### Phase 5: Billing & Entitlements
 - [ ] Implement `server/lib/stripe.ts` (create customer on signup, create checkout session, portal session, verify webhooks).
