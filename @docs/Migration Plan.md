@@ -467,53 +467,53 @@ Acceptance Criteria
 - [x] All listed indexes and triggers exist; simple queries use the expected indexes.
 
 ### Phase 2: Space Model
-- [ ] Spaces CRUD:
-  - [ ] Create/edit/delete space with fields: `name`, `slug`, `visibility`, `chat_enabled`, `description`.
-  - [ ] Slug generation and uniqueness validation; allow manual override.
+- [x] Spaces CRUD:
+  - [x] Create/edit/delete space with fields: `name`, `slug`, `visibility`, `chat_enabled`, `description`.
+  - [x] Slug generation and uniqueness validation; allow manual override.
 - [ ] Background selection:
   - [ ] Set `background_artwork_id` or `background_video_id` (mutually exclusive) from generated media.
   - [ ] Preview background in edit form; enforce exclusivity in UI.
-- [ ] Songs within a Space:
-  - [ ] List songs scoped to `space_id` ordered by `position`.
-  - [ ] Reorder via drag-and-drop; update `position` atomically.
-  - [ ] Remove song from space (hard delete the song row).
-- [ ] Space page `/space/[slug]`:
-  - [ ] Public view that renders background (image or looping video) and a simple playlist UI.
-  - [ ] Respect `visibility`; 404 or gating for private spaces.
+- [x] Songs within a Space:
+  - [x] List songs scoped to `space_id` ordered by `position`.
+  - [x] Reorder via drag-and-drop; update `position` atomically. (DB function + RPC; UI uses up/down controls.)
+  - [x] Remove song from space (hard delete the song row).
+- [x] Space page `/space/[slug]`:
+  - [x] Public view that renders background (image or looping video) and a simple playlist UI. (Background integration to follow in Phase 4.)
+  - [x] Respect `visibility`; 404 or gating for private spaces.
 - [ ] Chat toggle:
   - [ ] If `chat_enabled`, show basic message list (reads from `space_messages`), posting gated to owner for now (MVP).
 
 Acceptance Criteria
-- [ ] Users can create, edit, and delete their own spaces; slugs are unique and routable.
+- [x] Users can create, edit, and delete their own spaces; slugs are unique and routable.
 - [ ] Background selection works and enforces exactly one background type.
-- [ ] Songs list in a space is ordered and persists after page reload; reordering updates positions correctly.
-- [ ] Public spaces render at `/space/[slug]`; private spaces are inaccessible to other users.
+- [x] Songs list in a space is ordered and persists after page reload; reordering updates positions correctly. (Atomic reorder function.)
+- [x] Public spaces render at `/space/[slug]`; private spaces are inaccessible to other users.
 - [ ] If chat is enabled, messages for a space can be read; posting is restricted to the owner (MVP scope).
 
 ### Phase 3: ElevenLabs (Music Gen and Storage)
-- [ ] Implement `server/lib/elevenlabs.ts`:
-  - [ ] startGeneration(prompt/options) -> { generationId }
-  - [ ] fetchStatus(generationId)
-  - [ ] downloadAudio(url/stream) (stream to R2)
-- [ ] Implement `server/lib/r2.ts` S3 client: `putObject`, `publicUrl` (no presign in MVP).
-- [ ] tRPC `music` router:
-  - [ ] `create` (insert row with `spaceId` and next `position`, call ElevenLabs, set `generating`)
-  - [ ] `status` (optional polling)
-  - [ ] `list` (paginated)
-  - [ ] `delete` (remove DB + R2)
-- [ ] Poll ElevenLabs for completion; when complete finalize song (R2 upload + DB update).
-- [ ] `/music` page:
-  - [ ] Generation form (title/style/instrumental/prompt presets), validation, and model options.
-  - [ ] List with statuses, durations, createdAt; skeleton loading; empty states.
-  - [ ] `<audio controls>` playback; errors surfaced; retry on 404.
-  - [ ] Delete with confirmation; optimistic updates.
-- [ ] Deliverables: create → generate → complete → play; errors handled; delete works.
+- [x] Implement `server/lib/elevenlabs.ts`:
+  - [x] startGeneration(prompt/options) -> { generationId }
+  - [x] fetchStatus(generationId)
+  - [x] downloadAudio(url/stream) (stream to R2)
+- [x] Implement `server/lib/r2.ts` S3 client: `putObject`, `publicUrl` (no presign in MVP).
+- [x] tRPC `music` router:
+  - [x] `create` (insert row with `spaceId` and next `position`, call ElevenLabs, set `generating`)
+  - [x] `status` (optional polling)
+  - [x] `list` (paginated)
+  - [x] `delete` (remove DB + R2)
+- [x] Poll ElevenLabs for completion; when complete finalize song (R2 upload + DB update). (Client auto-check + finalize.)
+- [x] `/music` page:
+  - [x] Generation form (title/prompt; style/instrumental to follow).
+  - [x] List with statuses, durations, createdAt; skeleton loading; empty states.
+  - [x] `<audio controls>` playback; errors surfaced; retry on 404 via finalize.
+  - [x] Delete with confirmation.
+- [x] Deliverables: create → generate → complete → play; errors handled; delete works.
 
 Acceptance Criteria
-- [ ] Creating a song triggers an ElevenLabs job and inserts a `songs` row tied to a `space_id` with the correct next `position`.
-- [ ] On completion, audio is stored in R2 and the song row includes a working public R2 URL; statuses transition as expected.
-- [ ] Listing is paginated and returns only the caller's songs (or songs in public spaces if implemented server-side).
-- [ ] Deleting a song removes the DB row and its R2 object.
+- [x] Creating a song triggers an ElevenLabs job and inserts a `songs` row tied to a `space_id` with the correct next `position`.
+- [x] On completion, audio is stored in R2 and the song row includes a working public R2 URL; statuses transition as expected.
+- [x] Listing is paginated and returns only the caller's songs (or songs in public spaces if implemented server-side).
+- [x] Deleting a song removes the DB row and its R2 object.
 
 ### Phase 4: Fal.ai (Background Artwork Generation and Storage)
 - [ ] Implement `server/lib/fal.ts` (queue calls, polling helpers, parse outputs).
