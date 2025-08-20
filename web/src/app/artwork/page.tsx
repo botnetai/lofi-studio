@@ -21,8 +21,7 @@ export default function ArtworkPage() {
         className="space-y-3"
         onSubmit={async (e) => {
           e.preventDefault();
-          const payload = { prompt: formValues.prompt || prompt };
-          await create.mutateAsync({ prompt: payload.prompt, model });
+          await create.mutateAsync({ modelId: model, params: { ...formValues } });
           setPrompt('');
           refetch();
         }}

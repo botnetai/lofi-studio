@@ -23,14 +23,7 @@ export default function VideoPage() {
         className="space-y-3"
         onSubmit={async (e) => {
           e.preventDefault();
-          const payload: any = { prompt: formValues.prompt || prompt };
-          if (schema.data) {
-            for (const f of schema.data.fields) {
-              const val = formValues[f.key];
-              if (val !== undefined && f.key !== 'prompt') payload[f.key] = val;
-            }
-          }
-          await create.mutateAsync({ prompt: payload.prompt, duration: payload.duration, mode: payload.mode, artworkId: artworkId || undefined, model });
+          await create.mutateAsync({ modelId: model, params: { ...formValues }, artworkId: artworkId || undefined });
           refetch();
         }}
       >
