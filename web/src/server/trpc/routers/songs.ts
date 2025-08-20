@@ -27,7 +27,7 @@ export const songsRouter = router({
     .input(z.object({ spaceId: z.string().uuid(), songIdsInOrder: z.array(z.string().uuid()).min(1) }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new Error('Unauthorized');
-      // Fetch current songs to verify ownership
+      // Ownership check: ensure all songs belong to the user
       const { data: songs, error: fetchErr } = await ctx.supabase
         .from('songs')
         .select('id,user_id')
@@ -35,12 +35,11 @@ export const songsRouter = router({
       if (fetchErr) throw fetchErr;
       if (!songs || songs.some((s) => s.user_id !== ctx.user!.id)) throw new Error('Forbidden');
 
-      // Update positions sequentially
-      for (let i = 0; i < input.songIdsInOrder.length; i++) {
-        const id = input.songIdsInOrder[i];
-        const { error } = await ctx.supabase.from('songs').update({ position: i }).eq('id', id);
-        if (error) throw error;
-      }
+      const { error } = await ctx.supabase.rpc('reorder_songs', {
+        space_id: input.spaceId,
+        song_ids: input.songIdsInOrder,
+      });
+      if (error) throw error;
       return { ok: true };
     }),
 });

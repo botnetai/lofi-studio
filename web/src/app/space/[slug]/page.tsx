@@ -1,3 +1,4 @@
+"use client";
 import { trpc } from '@/lib/trpcClient';
 
 export default function SpacePublicPage({ params }: { params: { slug: string } }) {
