@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { startGeneration, fetchStatus, downloadStream } from '@/server/lib/elevenlabs';
-import { putObjectToR2, publicR2Url } from '@/server/lib/r2';
+import { putObjectToR2, publicR2Url, deleteObjectFromR2 } from '@/server/lib/r2';
+import { Readable } from 'node:stream';
 
 export const musicRouter = router({
   create: publicProcedure
@@ -52,8 +53,11 @@ export const musicRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new Error('Unauthorized');
+      // Fetch r2_key for deletion
+      const { data: song } = await ctx.supabase.from('songs').select('r2_key').eq('id', input.id).eq('user_id', ctx.user.id).maybeSingle();
       const { error } = await ctx.supabase.from('songs').delete().eq('id', input.id).eq('user_id', ctx.user.id);
       if (error) throw error;
+      if (song?.r2_key) await deleteObjectFromR2(song.r2_key);
       return { ok: true };
     }),
 
@@ -65,7 +69,29 @@ export const musicRouter = router({
       if (status.status !== 'completed' || !status.url) return { ok: false, status: status.status } as const;
       const res = await downloadStream(status.url);
       const key = `music/${input.id}.mp3`;
-      await putObjectToR2({ key, body: res.body as any, contentType: 'audio/mpeg' });
+      const body: any = (res.body && (res.body as any).getReader) ? Readable.fromWeb(res.body as any) : res.body;
+      await putObjectToR2({ key, body, contentType: 'audio/mpeg' });
+      const r2Url = publicR2Url(key);
+      const { error } = await ctx.supabase
+        .from('songs')
+        .update({ status: 'completed', r2_key: key, r2_url: r2Url, duration_seconds: status.duration_seconds ?? null })
+        .eq('id', input.id)
+        .eq('user_id', ctx.user.id);
+      if (error) throw error;
+      return { ok: true, url: r2Url } as const;
+    }),
+
+  check: publicProcedure
+    .input(z.object({ id: z.string().uuid(), generationId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user) throw new Error('Unauthorized');
+      const status = await fetchStatus(input.generationId);
+      if (status.status !== 'completed' || !status.url) return { ok: false, status: status.status } as const;
+      // Auto-finalize on completion
+      const res = await downloadStream(status.url);
+      const key = `music/${input.id}.mp3`;
+      const body: any = (res.body && (res.body as any).getReader) ? Readable.fromWeb(res.body as any) : res.body;
+      await putObjectToR2({ key, body, contentType: 'audio/mpeg' });
       const r2Url = publicR2Url(key);
       const { error } = await ctx.supabase
         .from('songs')
