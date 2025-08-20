@@ -14,6 +14,8 @@ export default function ManageSpacePage() {
   const del = trpc.spaces.delete.useMutation({ onSuccess: () => router.push('/spaces') });
   const songs = trpc.songs.list.useQuery({ spaceId: space.data?.id ?? '00000000-0000-0000-0000-000000000000' }, { enabled: !!space.data?.id });
   const reorder = trpc.songs.reorder.useMutation({ onSuccess: () => songs.refetch() });
+  const artworks = trpc.artwork.list.useQuery({}, { enabled: !!space.data?.id });
+  const videos = trpc.video.list.useQuery({}, { enabled: !!space.data?.id });
 
   useEffect(() => {
     if (space.data) {
@@ -83,6 +85,30 @@ export default function ManageSpacePage() {
         >
           {reorder.isPending ? 'Saving…' : 'Save Order'}
         </button>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-medium">Background</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {artworks.data?.map((a) => (
+            <button
+              key={a.id}
+              className="border rounded overflow-hidden"
+              onClick={() => update.mutate({ id: space.data!.id, backgroundArtworkId: a.id, backgroundVideoId: undefined })}
+            >
+              {a.r2_url ? <img src={a.r2_url} alt="artwork" /> : <div className="h-24 bg-neutral-100" />}
+            </button>
+          ))}
+          {videos.data?.map((v) => (
+            <button
+              key={v.id}
+              className="border rounded overflow-hidden"
+              onClick={() => update.mutate({ id: space.data!.id, backgroundVideoId: v.id, backgroundArtworkId: undefined })}
+            >
+              {v.r2_url ? <video src={v.r2_url} muted /> : <div className="h-24 bg-neutral-100" />}
+            </button>
+          ))}
+        </div>
       </section>
 
       <button className="text-red-600 underline" onClick={() => del.mutate({ id: space.data!.id })}>Delete Space</button>
