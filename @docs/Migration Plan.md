@@ -549,17 +549,17 @@ Acceptance Criteria
 - [x] Entitlements enforced in server routers: Free users cannot create a second space; Pro users can create up to 10.
 - [x] `/account` displays plan and a working "Manage billing" link; `/pricing` shows correct plan options.
 
-#### Phase 6: SFX Overlays
-- [x] SFX catalog seeded (`sfx_effects`), UI selector with categories and live preview.
-- [x] Web Audio API mixers on web; `expo-av` dual playback on mobile with gain controls.
-- [x] Persist per-Space selections (`space_sfx`) and default gains; apply on Space load.
+#### Phase 6: SFX Overlays (MOVED TO LATER)
+- [ ] SFX catalog seeded (`sfx_effects`), UI selector with categories and live preview.
+- [ ] Web Audio API mixers on web; `expo-av` dual playback on mobile with gain controls.
+- [ ] Persist per-Space selections (`space_sfx`) and default gains; apply on Space load.
 - [ ] Optional: basic export pre-mix (server or external service) to create shareable merged audio in R2.
-- [x] Deliverables: users can layer ambient SFX over tracks in Spaces and share the experience.
+- [ ] Deliverables: users can layer ambient SFX over tracks in Spaces and share the experience.
 
 Acceptance Criteria
-- [x] Users can add one or more SFX overlays on top of a playing track on web; gains are adjustable and persist per space.
+- [ ] Users can add one or more SFX overlays on top of a playing track on web; gains are adjustable and persist per space.
 - [ ] On mobile (Expo), two-sound playback (base+SFX) works with independent gain controls.
-- [x] SFX selections are persisted (`space_sfx` or metadata) and applied when loading a Space.
+- [ ] SFX selections are persisted (`space_sfx` or metadata) and applied when loading a Space.
 
 ### Phase 7: Optimizations, Documentation, Hardening
 - [x] Performance & UX
@@ -599,7 +599,12 @@ Acceptance Criteria
 
 ---
 
-## LATER: Expo Mobile App (Companion)
+# LATER
+
+
+
+
+## Expo Mobile App (Companion)
 
 ### Goals
 - Provide a mobile-first companion to browse Spaces, play audio, and view artwork/videos.
