@@ -23,8 +23,8 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Cache API routes that are safe to cache
-  if (url.startsWith('/api/') && !url.includes('/webhooks/')) {
+  // Cache API routes that are safe to cache (GET requests only)
+  if (url.startsWith('/api/') && !url.includes('/webhooks/') && request.method === 'GET') {
     response.headers.set(
       'Cache-Control',
       'public, max-age=300, s-maxage=300' // 5 minutes
