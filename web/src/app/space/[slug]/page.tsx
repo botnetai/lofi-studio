@@ -1,42 +1,74 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
-import { AudioMixer } from '@/components/AudioMixer';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+
+// Dynamically import AudioMixer to reduce initial bundle size
+const AudioMixer = dynamic(() => import('@/components/AudioMixer').then(mod => mod.AudioMixer), {
+  loading: () => <div className="p-4 bg-gray-100 rounded-lg">Loading audio player...</div>,
+  ssr: false // Audio components don't need SSR
+});
 
 export default function SpacePublicPage({ params }: { params: { slug: string } }) {
   const space = trpc.spaces.getBySlug.useQuery({ slug: params.slug });
-  const messages = trpc.spaceMessages.list.useQuery({ spaceId: space.data?.id ?? '00000000-0000-0000-0000-000000000000' }, { enabled: !!space.data?.id });
-  const songs = trpc.songs.list.useQuery({ spaceId: space.data?.id ?? '' }, { enabled: !!space.data?.id });
-  const spaceSFX = trpc.sfx.getSpaceEffects.useQuery({ spaceId: space.data?.id ?? '' }, { enabled: !!space.data?.id });
 
-  // Get background artwork/video data if needed
+  // Memoize space data to prevent unnecessary re-queries
+  const spaceId = space.data?.id;
+
+  const messages = trpc.spaceMessages.list.useQuery(
+    { spaceId: spaceId ?? '00000000-0000-0000-0000-000000000000' },
+    { enabled: !!spaceId }
+  );
+
+  const songs = trpc.songs.list.useQuery(
+    { spaceId: spaceId ?? '' },
+    { enabled: !!spaceId }
+  );
+
+  const spaceSFX = trpc.sfx.getSpaceEffects.useQuery(
+    { spaceId: spaceId ?? '' },
+    { enabled: !!spaceId }
+  );
+
+  // Only fetch artworks/videos if we have IDs to look for
+  const backgroundArtworkId = space.data?.background_artwork_id;
+  const backgroundVideoId = space.data?.background_video_id;
+
   const artworks = trpc.artwork.list.useQuery(
     { cursor: undefined, limit: 100 },
-    { enabled: !!space.data?.background_artwork_id }
-  );
-  const videos = trpc.video.list.useQuery(
-    { cursor: undefined, limit: 100 },
-    { enabled: !!space.data?.background_video_id }
+    { enabled: !!backgroundArtworkId }
   );
 
-  const backgroundArtwork = artworks.data?.find(a => a.id === space.data?.background_artwork_id);
-  const backgroundVideo = videos.data?.find(v => v.id === space.data?.background_video_id);
+  const videos = trpc.video.list.useQuery(
+    { cursor: undefined, limit: 100 },
+    { enabled: !!backgroundVideoId }
+  );
 
   const [sfxGains, setSfxGains] = useState<Map<string, number>>(new Map());
 
-  // Get the first song for main audio (could be enhanced to handle playlists)
-  const mainSong = songs.data?.[0];
-  const mainAudioUrl = mainSong?.r2_url;
+  // Memoize computed values to prevent unnecessary recalculations
+  const { backgroundArtwork, backgroundVideo, mainAudioUrl, sfxEffects } = useMemo(() => {
+    const bgArtwork = artworks.data?.find(a => a.id === backgroundArtworkId);
+    const bgVideo = videos.data?.find(v => v.id === backgroundVideoId);
+    const mainSong = songs.data?.[0];
+    const audioUrl = mainSong?.r2_url;
 
-  // Prepare SFX effects with current gain values
-  const sfxEffects = spaceSFX.data?.map(spaceSfx => ({
-    id: spaceSfx.sfx_effect_id,
-    name: spaceSfx.sfx_effects.name,
-    display_name: spaceSfx.sfx_effects.display_name,
-    r2_url: spaceSfx.sfx_effects.r2_url,
-    gain: sfxGains.get(spaceSfx.sfx_effect_id) ?? spaceSfx.gain,
-    default_gain: spaceSfx.sfx_effects.default_gain,
-  })) ?? [];
+    const effects = spaceSFX.data?.map(spaceSfx => ({
+      id: spaceSfx.sfx_effect_id,
+      name: spaceSfx.sfx_effects.name,
+      display_name: spaceSfx.sfx_effects.display_name,
+      r2_url: spaceSfx.sfx_effects.r2_url,
+      gain: sfxGains.get(spaceSfx.sfx_effect_id) ?? spaceSfx.gain,
+      default_gain: spaceSfx.sfx_effects.default_gain,
+    })) ?? [];
+
+    return {
+      backgroundArtwork: bgArtwork,
+      backgroundVideo: bgVideo,
+      mainAudioUrl: audioUrl,
+      sfxEffects: effects
+    };
+  }, [artworks.data, videos.data, songs.data, spaceSFX.data, sfxGains, backgroundArtworkId, backgroundVideoId]);
 
   const handleGainChange = (sfxId: string, gain: number) => {
     setSfxGains(prev => new Map(prev).set(sfxId, gain));

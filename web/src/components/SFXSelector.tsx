@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { trpc } from '@/lib/trpcClient';
+import { toast } from 'sonner';
 
 interface SFXEffect {
   id: string;
@@ -31,9 +32,19 @@ interface SFXSelectorProps {
 export function SFXSelector({ spaceId, currentSFX, onSFXChange }: SFXSelectorProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const { data: availableEffects } = trpc.sfx.listEffects.useQuery(
-    selectedCategory === 'all' ? {} : { category: selectedCategory as any }
+    selectedCategory === 'all' ? {} : { category: selectedCategory }
   );
 
   const addSFX = trpc.sfx.addSpaceEffect.useMutation();
@@ -48,19 +59,33 @@ export function SFXSelector({ spaceId, currentSFX, onSFXChange }: SFXSelectorPro
       onSFXChange();
     } catch (error) {
       console.error('Error adding SFX:', error);
+      toast.error('Failed to add SFX effect');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleUpdateGain = async (spaceSfxId: string, gain: number) => {
+  const handleUpdateGain = useCallback(async (spaceSfxId: string, gain: number) => {
     try {
       await updateSFX.mutateAsync({ spaceSfxId, gain });
       onSFXChange();
     } catch (error) {
       console.error('Error updating SFX gain:', error);
+      toast.error('Failed to update SFX volume');
     }
-  };
+  }, [updateSFX, onSFXChange]);
+
+  const handleUpdateGainDebounced = useCallback((spaceSfxId: string, gain: number) => {
+    // Clear any existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    // Set a new timeout to call the actual update after 200ms
+    debounceTimeoutRef.current = setTimeout(() => {
+      handleUpdateGain(spaceSfxId, gain);
+    }, 200);
+  }, [handleUpdateGain]);
 
   const handleRemoveSFX = async (spaceSfxId: string) => {
     setIsLoading(true);
@@ -69,6 +94,7 @@ export function SFXSelector({ spaceId, currentSFX, onSFXChange }: SFXSelectorPro
       onSFXChange();
     } catch (error) {
       console.error('Error removing SFX:', error);
+      toast.error('Failed to remove SFX effect');
     } finally {
       setIsLoading(false);
     }
@@ -80,6 +106,7 @@ export function SFXSelector({ spaceId, currentSFX, onSFXChange }: SFXSelectorPro
       onSFXChange();
     } catch (error) {
       console.error('Error reordering SFX:', error);
+      toast.error('Failed to reorder SFX effects');
     }
   };
 
@@ -107,7 +134,7 @@ export function SFXSelector({ spaceId, currentSFX, onSFXChange }: SFXSelectorPro
                       max="1"
                       step="0.1"
                       value={spaceSfx.gain}
-                      onChange={(e) => handleUpdateGain(spaceSfx.id, parseFloat(e.target.value))}
+                      onChange={(e) => handleUpdateGainDebounced(spaceSfx.id, parseFloat(e.target.value))}
                       className="w-20"
                     />
                     <span className="text-sm w-8">{Math.round(spaceSfx.gain * 100)}%</span>

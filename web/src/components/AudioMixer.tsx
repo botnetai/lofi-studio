@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
 
 interface SFXEffect {
   id: string;
@@ -20,11 +21,22 @@ interface AudioMixerProps {
 export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixerProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const mainGainNodeRef = useRef<GainNode | null>(null);
-  const sfxGainNodesRef = useRef<Map<string, { gain: GainNode; source?: AudioBufferSourceNode }>>(new Map());
+  const sfxAudioDataRef = useRef<Map<string, { gain: GainNode; buffer: AudioBuffer; source?: AudioBufferSourceNode }>>(new Map());
+  const mainAudioBufferRef = useRef<AudioBuffer | null>(null);
   const mainSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [mainVolume, setMainVolume] = useState(1.0);
+
+  // Memoize SFX effects to prevent unnecessary re-renders
+  const memoizedSFXEffects = useMemo(() =>
+    sfxEffects.map(effect => ({
+      id: effect.id,
+      gain: effect.gain,
+      display_name: effect.display_name
+    })),
+    [sfxEffects]
+  );
 
   // Initialize AudioContext
   useEffect(() => {
@@ -70,6 +82,9 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
           mainSourceRef.current.stop();
         }
 
+        // Store the audio buffer for reuse
+        mainAudioBufferRef.current = audioBuffer;
+
         // Create new source
         const source = audioContextRef.current!.createBufferSource();
         source.buffer = audioBuffer;
@@ -83,27 +98,42 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
         }
       } catch (error) {
         console.error('Error loading main audio:', error);
+        toast.error('Failed to load main audio');
       }
     };
 
     loadMainAudio();
   }, [mainAudioUrl, isPlaying]);
 
-  // Load and manage SFX effects
+  // Load SFX effects when the list changes (not when gain changes)
   useEffect(() => {
     if (!audioContextRef.current) return;
 
-    const loadSFXEffect = async (effect: SFXEffect) => {
-      try {
-        const response = await fetch(effect.r2_url);
-        const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
+    const currentEffectIds = new Set(sfxEffects.map(effect => effect.id));
+    const existingEffectIds = new Set(sfxAudioDataRef.current.keys());
 
-        // Stop any existing source for this effect
-        const existing = sfxGainNodesRef.current.get(effect.id);
+    // Remove effects that are no longer in the list
+    for (const existingId of existingEffectIds) {
+      if (!currentEffectIds.has(existingId)) {
+        const existing = sfxAudioDataRef.current.get(existingId);
         if (existing?.source) {
           existing.source.stop();
         }
+        sfxAudioDataRef.current.delete(existingId);
+      }
+    }
+
+    // Load new effects that aren't already loaded
+    const loadSFXEffect = async (effect: SFXEffect) => {
+      if (sfxAudioDataRef.current.has(effect.id)) return; // Already loaded
+
+      try {
+        const response = await fetch(effect.r2_url);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch audio file: ${response.status}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
 
         // Create gain node
         const gainNode = audioContextRef.current!.createGain();
@@ -117,29 +147,31 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
         source.connect(gainNode);
 
         // Store references
-        sfxGainNodesRef.current.set(effect.id, { gain: gainNode, source });
+        sfxAudioDataRef.current.set(effect.id, { gain: gainNode, buffer: audioBuffer, source });
 
         if (isPlaying) {
           source.start();
         }
       } catch (error) {
         console.error(`Error loading SFX ${effect.name}:`, error);
+        toast.error(`Failed to load SFX: ${effect.display_name}`);
       }
     };
 
-    // Load all SFX effects
+    // Load all SFX effects that aren't already loaded
     sfxEffects.forEach(loadSFXEffect);
 
-    // Cleanup function to stop all SFX when effects change
-    return () => {
-      sfxEffects.forEach(effect => {
-        const existing = sfxGainNodesRef.current.get(effect.id);
-        if (existing?.source) {
-          existing.source.stop();
-        }
-      });
-    };
-  }, [sfxEffects, isPlaying]);
+  }, [sfxEffects.map(effect => effect.id).join(','), isPlaying]); // Only depend on effect IDs, not gain values
+
+  // Handle SFX gain changes (separate from loading to avoid re-fetching audio)
+  useEffect(() => {
+    sfxEffects.forEach(effect => {
+      const gainNode = sfxAudioDataRef.current.get(effect.id)?.gain;
+      if (gainNode) {
+        gainNode.gain.value = effect.gain;
+      }
+    });
+  }, [sfxEffects.map(effect => `${effect.id}:${effect.gain}`).join(',')]); // Only depend on gain values
 
   // Handle main volume changes
   useEffect(() => {
@@ -148,81 +180,69 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
     }
   }, [mainVolume]);
 
-  // Handle SFX gain changes
-  useEffect(() => {
-    sfxEffects.forEach(effect => {
-      const gainNode = sfxGainNodesRef.current.get(effect.id)?.gain;
-      if (gainNode) {
-        gainNode.gain.value = effect.gain;
-      }
-    });
-  }, [sfxEffects]);
-
-  const togglePlay = () => {
+  const togglePlay = useCallback(async () => {
     if (!audioContextRef.current) return;
 
     if (isPlaying) {
-      // Pause all audio
-      if (mainSourceRef.current) {
-        mainSourceRef.current.stop();
-        mainSourceRef.current = null;
+      // Pause all audio using AudioContext suspend
+      try {
+        await audioContextRef.current.suspend();
+        setIsPlaying(false);
+      } catch (error) {
+        console.error('Error pausing audio:', error);
+        toast.error('Failed to pause audio');
       }
-
-      sfxGainNodesRef.current.forEach(({ source }) => {
-        if (source) {
-          source.stop();
-        }
-      });
-
-      setIsPlaying(false);
     } else {
-      // Resume audio context if suspended
-      if (audioContextRef.current.state === 'suspended') {
-        audioContextRef.current.resume();
-      }
+      // Resume audio using AudioContext resume
+      try {
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
 
-      // Restart main audio
-      if (mainAudioUrl && mainGainNodeRef.current) {
-        fetch(mainAudioUrl)
-          .then(response => response.arrayBuffer())
-          .then(arrayBuffer => audioContextRef.current!.decodeAudioData(arrayBuffer))
-          .then(audioBuffer => {
-            const source = audioContextRef.current!.createBufferSource();
-            source.buffer = audioBuffer;
-            source.loop = true;
-            source.connect(mainGainNodeRef.current!);
-            source.start();
-            mainSourceRef.current = source;
-          });
-      }
+        // Start main audio if not already playing
+        if (mainAudioUrl && mainGainNodeRef.current && !mainSourceRef.current) {
+          let audioBuffer = mainAudioBufferRef.current;
 
-      // Restart all SFX
-      sfxEffects.forEach(async (effect) => {
-        try {
-          const response = await fetch(effect.r2_url);
-          const arrayBuffer = await response.arrayBuffer();
-          const audioBuffer = await audioContextRef.current!.decodeAudioData(arrayBuffer);
+          // Load audio buffer if not already cached
+          if (!audioBuffer) {
+            const response = await fetch(mainAudioUrl);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch main audio: ${response.status}`);
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+            mainAudioBufferRef.current = audioBuffer;
+          }
 
-          const gainNode = sfxGainNodesRef.current.get(effect.id)?.gain ||
-            audioContextRef.current!.createGain();
-          gainNode.gain.value = effect.gain;
-          gainNode.connect(audioContextRef.current!.destination);
-
-          const source = audioContextRef.current!.createBufferSource();
+          const source = audioContextRef.current.createBufferSource();
           source.buffer = audioBuffer;
           source.loop = true;
-          source.connect(gainNode);
-
-          sfxGainNodesRef.current.set(effect.id, { gain: gainNode, source });
+          source.connect(mainGainNodeRef.current);
           source.start();
-        } catch (error) {
-          console.error(`Error restarting SFX ${effect.name}:`, error);
+          mainSourceRef.current = source;
         }
-      });
 
-      setIsPlaying(true);
+        // Start any SFX that aren't already playing
+        sfxEffects.forEach(effect => {
+          const existing = sfxAudioDataRef.current.get(effect.id);
+          if (existing && (!existing.source || existing.source.context.state === 'suspended')) {
+            // Create a new source since the old one was stopped or context was suspended
+            const source = audioContextRef.current!.createBufferSource();
+            source.buffer = existing.buffer;
+            source.loop = true;
+            source.connect(existing.gain);
+            source.start();
+            existing.source = source;
+          }
+        });
+
+        setIsPlaying(true);
+      } catch (error) {
+        console.error('Error resuming audio:', error);
+        toast.error('Failed to resume audio');
+      }
     }
-  };
+  }, [isPlaying, sfxEffects]);
 
   return (
     <div className="audio-mixer p-4 bg-gray-100 rounded-lg">
@@ -253,7 +273,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
         <div className="sfx-controls">
           <h3 className="font-medium mb-2">SFX Effects:</h3>
           <div className="space-y-2">
-            {sfxEffects.map((effect) => (
+            {memoizedSFXEffects.map((effect) => (
               <div key={effect.id} className="flex items-center gap-2 p-2 bg-white rounded">
                 <span className="text-sm flex-1">{effect.display_name}</span>
                 <input
