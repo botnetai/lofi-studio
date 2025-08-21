@@ -8,6 +8,7 @@ import { musicRouter } from './music';
 import { artworkRouter } from './artwork';
 import { videoRouter } from './video';
 import { modelsRouter } from './models';
+import { billingRouter } from './billing';
 
 export const appRouter = router({
 	health: healthRouter,
@@ -19,6 +20,7 @@ export const appRouter = router({
 	artwork: artworkRouter,
 	video: videoRouter,
 	models: modelsRouter,
+	billing: billingRouter,
 });
 
 export type AppRouter = typeof appRouter;

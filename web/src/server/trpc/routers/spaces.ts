@@ -18,6 +18,11 @@ export const spacesRouter = router({
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new Error('Unauthorized');
       const supabase = ctx.supabase;
+      // Entitlements: free=1 total, pro=10 total
+      const { data: sub } = await supabase.from('user_subscriptions').select('plan').eq('user_id', ctx.user.id).maybeSingle();
+      const limit = sub?.plan === 'pro' ? 10 : 1;
+      const { count } = await supabase.from('spaces').select('id', { count: 'exact', head: true }).eq('user_id', ctx.user.id);
+      if ((count ?? 0) >= limit) throw new Error('Space limit reached for your plan');
       const desiredSlug = input.slug ?? slugify(input.name);
       // Ensure unique slug
       const { data: existing } = await supabase

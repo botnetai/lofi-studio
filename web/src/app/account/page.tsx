@@ -1,5 +1,6 @@
 import { getServerSupabaseClient } from '@/server/supabaseServer';
 import Link from 'next/link';
+import { BillingClient } from './pricing-client';
 
 export default async function AccountPage() {
 	const supabase = await getServerSupabaseClient();
@@ -11,6 +12,7 @@ export default async function AccountPage() {
 			{user ? (
 				<div className="space-y-2">
 					<div className="text-sm">Signed in as {user.email}</div>
+					<BillingClient />
 					<form action="/auth/signout" method="post">
 						<button className="bg-black text-white px-4 py-2 rounded">Sign out</button>
 					</form>
