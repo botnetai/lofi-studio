@@ -1,9 +1,8 @@
 "use client";
 import Link from 'next/link';
 import { trpc } from '@/lib/trpcClient';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// Using basic HTML elements instead of shadcn/ui components for now
+// TODO: Set up shadcn/ui properly later
 import {
   Plus,
   FolderOpen,
@@ -42,8 +41,7 @@ export default function SpacesPage() {
         </div>
 
         {/* Create New Space */}
-        <Card className="card-hover">
-          <CardContent className="p-6">
+        <div className="card-hover bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center">
@@ -55,14 +53,13 @@ export default function SpacesPage() {
                 </div>
               </div>
               <Link href="/spaces/new">
-                <Button size="lg" className="gradient-bg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Create Space
-                </Button>
+                <button className="gradient-bg text-white px-6 py-3 rounded-full hover:shadow-xl transition-all duration-300 transform hover:scale-105 font-semibold flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Create Space</span>
+                </button>
               </Link>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
         {/* Loading State */}
         {isLoading && (
@@ -89,8 +86,7 @@ export default function SpacesPage() {
 
         {/* Error State */}
         {error && (
-          <Card className="border-red-200 dark:border-red-800">
-            <CardContent className="p-6">
+          <div className="border border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
               <div className="flex items-center space-x-3">
                 <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                 <div>
@@ -98,14 +94,13 @@ export default function SpacesPage() {
                   <p className="text-sm text-red-500 dark:text-red-400">{error.message}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && (!data || data.length === 0) && (
-          <Card className="text-center py-12">
-            <CardContent>
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <div>
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <FolderOpen className="w-8 h-8 text-white" />
               </div>
@@ -114,13 +109,13 @@ export default function SpacesPage() {
                 Create your first creative space to start generating music, artwork, and videos with AI.
               </p>
               <Link href="/spaces/new">
-                <Button size="lg" className="gradient-bg">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Space
-                </Button>
+                <button className="gradient-bg text-white px-6 py-3 rounded-full font-semibold flex items-center space-x-2">
+                  <Plus className="w-4 h-4" />
+                  <span>Create Your First Space</span>
+                </button>
               </Link>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Spaces Grid */}
@@ -137,8 +132,8 @@ export default function SpacesPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {data.map((s) => (
-                <Card key={s.id} className="card-hover group cursor-pointer">
-                  <CardHeader className="pb-4">
+                <div key={s.id} className="card-hover group cursor-pointer bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all">
+                  <div className="pb-4 p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -147,10 +142,10 @@ export default function SpacesPage() {
                           </span>
                         </div>
                         <div>
-                          <CardTitle className="text-lg group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                          <h3 className="text-lg group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors font-semibold">
                             {s.name}
-                          </CardTitle>
-                          <CardDescription className="flex items-center space-x-1">
+                          </h3>
+                          <p className="flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400">
                             <span>/{s.slug}</span>
                             <div className={`flex items-center space-x-1 text-xs ${
                               s.visibility === 'public'
@@ -160,29 +155,29 @@ export default function SpacesPage() {
                               {getVisibilityIcon(s.visibility)}
                               <span>{getVisibilityText(s.visibility)}</span>
                             </div>
-                          </CardDescription>
+                          </p>
                         </div>
                       </div>
                     </div>
-                  </CardHeader>
+                  </div>
 
-                  <CardContent className="pt-0">
+                  <div className="pt-0 px-6 pb-6">
                     <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                       Created {new Date(s.created_at).toLocaleDateString()}
                     </div>
 
                     <div className="flex space-x-2">
                       <Link href={`/space/${s.slug}`} className="flex-1">
-                        <Button size="sm" className="w-full gradient-bg group-hover:shadow-md transition-all">
-                          <FolderOpen className="w-4 h-4 mr-2" />
-                          Open Space
-                        </Button>
+                        <button className="w-full gradient-bg text-white px-4 py-2 rounded-md group-hover:shadow-md transition-all flex items-center justify-center space-x-2">
+                          <FolderOpen className="w-4 h-4" />
+                          <span>Open Space</span>
+                        </button>
                       </Link>
 
                       <Link href={`/space/${s.slug}/manage`}>
-                        <Button size="sm" variant="outline" className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                           <Settings className="w-4 h-4" />
-                        </Button>
+                        </button>
                       </Link>
                     </div>
 
@@ -199,8 +194,8 @@ export default function SpacesPage() {
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

@@ -1,11 +1,8 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
 import { useMemo, useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+// Using basic HTML elements instead of shadcn/ui components for now
+// TODO: Set up shadcn/ui properly later
 import {
   Music,
   Play,
@@ -62,21 +59,21 @@ export default function MusicPage() {
         </div>
 
         {/* Generation Form */}
-        <Card className="card-hover">
-          <CardHeader className="pb-6">
+        <div className="card-hover bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+          <div className="pb-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
                 <Music className="w-4 h-4 text-white" />
               </div>
               <div>
-                <CardTitle className="text-2xl">Generate New Track</CardTitle>
-                <CardDescription>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Generate New Track</h2>
+                <p className="text-gray-600 dark:text-gray-300">
                   Describe your music and let AI create something amazing
-                </CardDescription>
+                </p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+          </div>
+          <div className="space-y-6 mt-6">
       <form
               className="space-y-6"
         onSubmit={async (e) => {
@@ -103,21 +100,16 @@ export default function MusicPage() {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Choose Workspace
                 </label>
-                <Select value={spaceId} onValueChange={setSpaceId}>
-                  <SelectTrigger className="w-full h-12">
-                    <SelectValue placeholder="Select a workspace for your track..." />
-                  </SelectTrigger>
-                  <SelectContent>
-          {spaces.data?.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-6 h-6 gradient-bg rounded-md"></div>
-                          <span>{s.name}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <select
+                  value={spaceId}
+                  onChange={(e) => setSpaceId(e.target.value)}
+                  className="w-full h-12 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Select a workspace for your track...</option>
+                  {spaces.data?.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Title Input */}
@@ -125,12 +117,12 @@ export default function MusicPage() {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Track Title
                 </label>
-                <Input
+                <input
                   type="text"
                   placeholder="Give your track a name..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="h-12"
+                  className="w-full h-12 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
 
@@ -139,19 +131,18 @@ export default function MusicPage() {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Music Style
                 </label>
-                <Select value={style} onValueChange={setStyle}>
-                  <SelectTrigger className="w-full h-12">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lofi">Lofi Hip Hop</SelectItem>
-                    <SelectItem value="ambient">Ambient</SelectItem>
-                    <SelectItem value="electronic">Electronic</SelectItem>
-                    <SelectItem value="jazz">Jazz</SelectItem>
-                    <SelectItem value="classical">Classical</SelectItem>
-                    <SelectItem value="rock">Rock</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                  className="w-full h-12 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="lofi">Lofi Hip Hop</option>
+                  <option value="ambient">Ambient</option>
+                  <option value="electronic">Electronic</option>
+                  <option value="jazz">Jazz</option>
+                  <option value="classical">Classical</option>
+                  <option value="rock">Rock</option>
+                </select>
               </div>
 
               {/* Prompt Input */}
@@ -159,12 +150,12 @@ export default function MusicPage() {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Music Description
                 </label>
-                <Textarea
+                <textarea
                   placeholder="Describe the mood, instruments, tempo, and vibe you want..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   rows={4}
-                  className="resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Be specific about the atmosphere, instruments, and emotional tone you want to achieve.
@@ -186,11 +177,10 @@ export default function MusicPage() {
               </div>
 
               {/* Submit Button */}
-              <Button
+              <button
                 type="submit"
-                size="lg"
                 disabled={create.isPending || !spaceId}
-                className="w-full h-14 gradient-bg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                className="w-full h-14 gradient-bg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-white font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {create.isPending ? (
                   <>
@@ -203,7 +193,7 @@ export default function MusicPage() {
                     Generate Music
                   </>
                 )}
-              </Button>
+              </button>
 
               {create.error && (
                 <div className="p-4 bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg">
@@ -216,21 +206,21 @@ export default function MusicPage() {
                 </div>
               )}
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Generated Songs */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+          <div className="pb-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="flex items-center space-x-2 text-2xl font-bold text-gray-900 dark:text-white">
               <Music className="w-5 h-5" />
               <span>Your Tracks</span>
-            </CardTitle>
-            <CardDescription>
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
               Manage your generated music and download completed tracks
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </p>
+          </div>
+          <div className="mt-6">
             {isLoading && (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -281,51 +271,47 @@ export default function MusicPage() {
                 {s.r2_url ? (
                         <div className="flex items-center space-x-2">
                           <audio controls src={s.r2_url} className="h-8 w-48" />
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
                             onClick={() => window.open(s.r2_url!, '_blank')}
+                            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                           >
                             <Download className="w-4 h-4" />
-                          </Button>
+                          </button>
                         </div>
                       ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
+                                                <button
                           disabled={!s.generation_id}
-                    onClick={async () => {
-                      if (!s.generation_id) return;
-                      await finalize.mutateAsync({ id: s.id, generationId: s.generation_id });
-                      refetch();
-                    }}
-                  >
+                          onClick={async () => {
+                            if (!s.generation_id) return;
+                            await finalize.mutateAsync({ id: s.id, generationId: s.generation_id });
+                            refetch();
+                          }}
+                          className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                           {finalize.isPending ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             'Finalize'
                           )}
-                        </Button>
+                        </button>
                       )}
 
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                  onClick={async () => {
+                                            <button
+                        onClick={async () => {
                           if (!confirm('Are you sure you want to delete this track?')) return;
-                    await remove.mutateAsync({ id: s.id });
-                  }}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900"
+                          await remove.mutateAsync({ id: s.id });
+                        }}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900 rounded-md transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </div>
                   </div>
               </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
