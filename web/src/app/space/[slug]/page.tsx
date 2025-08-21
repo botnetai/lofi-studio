@@ -25,10 +25,11 @@ export default function SpacePublicPage({ params }: { params: { slug: string } }
     { enabled: !!spaceId }
   );
 
-  const spaceSFX = trpc.sfx.getSpaceEffects.useQuery(
-    { spaceId: spaceId ?? '' },
-    { enabled: !!spaceId }
-  );
+  // SFX functionality commented out for MVP
+  // const spaceSFX = trpc.sfx.getSpaceEffects.useQuery(
+  //   { spaceId: spaceId ?? '' },
+  //   { enabled: !!spaceId }
+  // );
 
   // Only fetch artworks/videos if we have IDs to look for
   const backgroundArtworkId = space.data?.background_artwork_id;
@@ -44,35 +45,28 @@ export default function SpacePublicPage({ params }: { params: { slug: string } }
     { enabled: !!backgroundVideoId }
   );
 
-  const [sfxGains, setSfxGains] = useState<Map<string, number>>(new Map());
+  // SFX functionality commented out for MVP
+  // const [sfxGains, setSfxGains] = useState<Map<string, number>>(new Map());
 
   // Memoize computed values to prevent unnecessary recalculations
-  const { backgroundArtwork, backgroundVideo, mainAudioUrl, sfxEffects } = useMemo(() => {
+  const { backgroundArtwork, backgroundVideo, mainAudioUrl } = useMemo(() => {
     const bgArtwork = artworks.data?.find(a => a.id === backgroundArtworkId);
     const bgVideo = videos.data?.find(v => v.id === backgroundVideoId);
     const mainSong = songs.data?.[0];
     const audioUrl = mainSong?.r2_url;
 
-    const effects = spaceSFX.data?.map(spaceSfx => ({
-      id: spaceSfx.sfx_effect_id,
-      name: spaceSfx.sfx_effects.name,
-      display_name: spaceSfx.sfx_effects.display_name,
-      r2_url: spaceSfx.sfx_effects.r2_url,
-      gain: sfxGains.get(spaceSfx.sfx_effect_id) ?? spaceSfx.gain,
-      default_gain: spaceSfx.sfx_effects.default_gain,
-    })) ?? [];
-
     return {
       backgroundArtwork: bgArtwork,
       backgroundVideo: bgVideo,
       mainAudioUrl: audioUrl,
-      sfxEffects: effects
+      // sfxEffects: [] // Commented out for MVP
     };
-  }, [artworks.data, videos.data, songs.data, spaceSFX.data, sfxGains, backgroundArtworkId, backgroundVideoId]);
+  }, [artworks.data, videos.data, songs.data, backgroundArtworkId, backgroundVideoId]);
 
-  const handleGainChange = (sfxId: string, gain: number) => {
-    setSfxGains(prev => new Map(prev).set(sfxId, gain));
-  };
+  // SFX functionality commented out for MVP
+  // const handleGainChange = (sfxId: string, gain: number) => {
+  //   setSfxGains(prev => new Map(prev).set(sfxId, gain));
+  // };
 
   if (space.isLoading) return <div className="p-8">Loading…</div>;
   if (!space.data) return <div className="p-8">Not found</div>;
@@ -110,13 +104,13 @@ export default function SpacePublicPage({ params }: { params: { slug: string } }
       )}
 
       {/* Audio Mixer */}
-      {(mainAudioUrl || sfxEffects.length > 0) && (
+      {mainAudioUrl && (
         <section>
           <h2 className="font-medium mb-2">Audio Experience</h2>
           <AudioMixer
             mainAudioUrl={mainAudioUrl}
-            sfxEffects={sfxEffects}
-            onGainChange={handleGainChange}
+            sfxEffects={[]} {/* SFX commented out for MVP */}
+            onGainChange={() => {}} {/* Placeholder for MVP */}
           />
         </section>
       )}
