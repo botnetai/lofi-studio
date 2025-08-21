@@ -15,13 +15,7 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  // Cache images from R2 (public URLs)
-  if (url.includes('/music/') || url.includes('/artwork/') || url.includes('/videos/')) {
-    response.headers.set(
-      'Cache-Control',
-      'public, max-age=86400, s-maxage=86400' // 1 day
-    );
-  }
+
 
   // Cache API routes that are safe to cache (GET requests only)
   if (url.startsWith('/api/') && !url.includes('/webhooks/') && request.method === 'GET') {
