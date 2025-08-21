@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 
+// SFX Router - COMMENTED OUT FOR MVP
+// SFX functionality moved to LATER section of migration plan
+// Uncomment and activate when ready to implement SFX features
+/*
 export const sfxRouter = router({
   // Get all available SFX effects
   listEffects: publicProcedure
@@ -212,3 +216,7 @@ export const sfxRouter = router({
       return { success: true };
     })
 });
+*/
+
+// Placeholder export to prevent import errors
+export const sfxRouter = router({});
