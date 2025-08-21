@@ -1,9 +1,8 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IMAGE_MODELS, getDefaultModelId } from '@/lib/falModels';
 import { DynamicModelForm } from '@/components/DynamicModelForm';
-import { trpc } from '@/lib/trpcClient';
 
 export default function ArtworkPage() {
   const [prompt, setPrompt] = useState('cozy room at night, window, rain');
