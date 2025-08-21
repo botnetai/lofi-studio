@@ -9,6 +9,7 @@ import { artworkRouter } from './artwork';
 import { videoRouter } from './video';
 import { modelsRouter } from './models';
 import { billingRouter } from './billing';
+import { sfxRouter } from './sfx';
 
 export const appRouter = router({
 	health: healthRouter,
@@ -21,6 +22,7 @@ export const appRouter = router({
 	video: videoRouter,
 	models: modelsRouter,
 	billing: billingRouter,
+	sfx: sfxRouter,
 });
 
 export type AppRouter = typeof appRouter;

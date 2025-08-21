@@ -2,6 +2,7 @@
 import { trpc } from '@/lib/trpcClient';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { SFXSelector } from '@/components/SFXSelector';
 
 export default function ManageSpacePage() {
   const params = useParams<{ slug: string }>();
@@ -16,6 +17,7 @@ export default function ManageSpacePage() {
   const reorder = trpc.songs.reorder.useMutation({ onSuccess: () => songs.refetch() });
   const artworks = trpc.artwork.list.useQuery({}, { enabled: !!space.data?.id });
   const videos = trpc.video.list.useQuery({}, { enabled: !!space.data?.id });
+  const spaceSFX = trpc.sfx.getSpaceEffects.useQuery({ spaceId: space.data?.id ?? '' }, { enabled: !!space.data?.id });
 
   useEffect(() => {
     if (space.data) {
@@ -109,6 +111,15 @@ export default function ManageSpacePage() {
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-medium">SFX Effects</h2>
+        <SFXSelector
+          spaceId={space.data!.id}
+          currentSFX={spaceSFX.data ?? []}
+          onSFXChange={() => spaceSFX.refetch()}
+        />
       </section>
 
       <button className="text-red-600 underline" onClick={() => del.mutate({ id: space.data!.id })}>Delete Space</button>
