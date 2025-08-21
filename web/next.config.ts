@@ -4,12 +4,14 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ["lucide-react"],
-    turbo: {
-      rules: {
-        "*.svg": {
-          loaders: ["@svgr/webpack"],
-          as: "*.js",
-        },
+  },
+
+  // Turbopack configuration (moved from experimental.turbo)
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
       },
     },
   },
@@ -24,7 +26,7 @@ const nextConfig: NextConfig = {
   compress: true,
 
   // Optimize CSS
-  swcMinify: true,
+  // swcMinify is now enabled by default in Next.js 15+
 
   // Bundle analyzer (optional - can be enabled during builds)
   webpack: (config, { isServer, dev }) => {

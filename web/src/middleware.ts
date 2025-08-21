@@ -33,6 +33,6 @@ export const config = {
     '/_next/static/:path*',
     '/public/:path*',
     '/api/:path*',
-    '/(.*\\.(jpg|jpeg|png|gif|svg|webp|avif|mp3|mp4|webm|ogg))$'
+    '/.*\\.(jpg|jpeg|png|gif|svg|webp|avif|mp3|mp4|webm|ogg)$'
   ]
 };
