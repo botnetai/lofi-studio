@@ -11,14 +11,13 @@ export function getStripe() {
   return new Stripe(key, { apiVersion: '2024-06-20' });
 }
 
-export async function getOrCreateCustomer(userId: string, email?: string | null) {
+export async function createCustomer(userId: string, email?: string | null) {
   const stripe = getStripe();
-  // In a full impl, we would look up stripe_customer_id. For MVP, create on demand.
   const customer = await stripe.customers.create({ email: email ?? undefined, metadata: { userId } });
   return customer.id;
 }
 
-export async function createCheckoutSession(params: { customerId: string; priceId: string; successUrl: string; cancelUrl: string }) {
+export async function createCheckoutSession(params: { customerId: string; priceId: string; successUrl: string; cancelUrl: string; userId: string }) {
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -26,6 +25,8 @@ export async function createCheckoutSession(params: { customerId: string; priceI
     line_items: [{ price: params.priceId, quantity: 1 }],
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
+    metadata: { userId: params.userId },
+    subscription_data: { metadata: { userId: params.userId } },
   });
   return session.url!;
 }
