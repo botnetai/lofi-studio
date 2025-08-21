@@ -533,21 +533,21 @@ Acceptance Criteria
 - [x] A space can successfully set either an image or a video as its background from the generated media.
 
 ### Phase 5: Billing & Entitlements
-- [ ] Implement `server/lib/stripe.ts` (create customer on signup, create checkout session, portal session, verify webhooks).
-- [ ] Add Stripe webhook handler `/api/webhooks/stripe` with signature verification + idempotency.
-- [ ] `billing` router:
-  - [ ] `createCheckoutSession(plan)` (Pro monthly/yearly), returns URL.
-  - [ ] `createPortalSession()` for managing subscription.
-  - [ ] `getSubscription()` returns current plan/status.
-- [ ] `user_subscriptions` table: `plan` (`free`|`pro`), `stripe_customer_id`, `stripe_subscription_id`, `status`, `current_period_end`.
-- [ ] Entitlements: enforce Space limits in server-side routers (free: 1 total; pro: up to 10 total).
-- [ ] UI: `/pricing` with plan details; upgrade/downgrade flows; `/account` shows plan & manage button.
+- [x] Implement `server/lib/stripe.ts` (create customer on signup, create checkout session, portal session, verify webhooks).
+- [x] Add Stripe webhook handler `/api/webhooks/stripe` with signature verification + idempotency.
+- [x] `billing` router:
+  - [x] `createCheckoutSession(plan)` (Pro monthly/yearly), returns URL.
+  - [x] `createPortalSession()` for managing subscription.
+  - [x] `getSubscription()` returns current plan/status.
+- [x] `user_subscriptions` table: `plan` (`free`|`pro`), `stripe_customer_id`, `stripe_subscription_id`, `status`, `current_period_end`.
+- [x] Entitlements: enforce Space limits in server-side routers (free: 1 total; pro: up to 10 total).
+- [x] UI: `/pricing` with plan details; upgrade/downgrade flows; `/account` shows plan & manage button.
 
 Acceptance Criteria
-- [ ] Stripe checkout session can be created and completed in test mode; subscription status persists.
-- [ ] Portal session opens successfully and updates reflect in `user_subscriptions`.
-- [ ] Entitlements enforced in server routers: Free users cannot create a second space; Pro users can create up to 10.
-- [ ] `/account` displays plan and a working "Manage billing" link; `/pricing` shows correct plan options.
+- [x] Stripe checkout session can be created and completed in test mode; subscription status persists.
+- [x] Portal session opens successfully and updates reflect in `user_subscriptions`.
+- [x] Entitlements enforced in server routers: Free users cannot create a second space; Pro users can create up to 10.
+- [x] `/account` displays plan and a working "Manage billing" link; `/pricing` shows correct plan options.
 
 #### Phase 6: SFX Overlays
 - [ ] SFX catalog seeded (`sfx_effects`), UI selector with categories and live preview.
