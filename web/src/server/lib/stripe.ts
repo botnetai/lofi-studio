@@ -11,6 +11,38 @@ export function getStripe() {
   return new Stripe(key, { apiVersion: '2024-06-20' });
 }
 
+// Cache for lookup_key -> price.id mappings (1 hour TTL)
+const priceCache = new Map<string, { priceId: string; expires: number }>();
+const CACHE_TTL = 1000 * 60 * 60; // 1 hour
+
+export async function getPriceByLookupKey(lookupKey: string): Promise<string> {
+  const now = Date.now();
+  const cached = priceCache.get(lookupKey);
+
+  // Return cached result if not expired
+  if (cached && cached.expires > now) {
+    return cached.priceId;
+  }
+
+  const stripe = getStripe();
+  const prices = await stripe.prices.list({
+    lookup_keys: [lookupKey],
+    active: true,
+    limit: 1,
+  });
+
+  if (prices.data.length === 0) {
+    throw new Error(`No active price found for lookup key: ${lookupKey}`);
+  }
+
+  const priceId = prices.data[0].id;
+
+  // Cache the result
+  priceCache.set(lookupKey, { priceId, expires: now + CACHE_TTL });
+
+  return priceId;
+}
+
 export async function createCustomer(userId: string, email?: string | null) {
   const stripe = getStripe();
   const customer = await stripe.customers.create({ email: email ?? undefined, metadata: { userId } });
