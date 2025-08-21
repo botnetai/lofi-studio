@@ -29,6 +29,8 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
   const [mainVolume, setMainVolume] = useState(1.0);
 
   // Memoize SFX effects to prevent unnecessary re-renders
+  // SFX functionality commented out for MVP
+  /*
   const memoizedSFXEffects = useMemo(() =>
     sfxEffects.map(effect => ({
       id: effect.id,
@@ -37,6 +39,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
     })),
     [sfxEffects]
   );
+  */
 
   // Initialize AudioContext
   useEffect(() => {
@@ -105,7 +108,9 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
     loadMainAudio();
   }, [mainAudioUrl, isPlaying]);
 
+  // SFX effects loading - COMMENTED OUT FOR MVP
   // Load SFX effects when the list changes (not when gain changes)
+  /*
   useEffect(() => {
     if (!audioContextRef.current) return;
 
@@ -162,8 +167,11 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
     sfxEffects.forEach(loadSFXEffect);
 
   }, [sfxEffects.map(effect => effect.id).join(','), isPlaying]); // Only depend on effect IDs, not gain values
+  */
 
+  // SFX gain changes - COMMENTED OUT FOR MVP
   // Handle SFX gain changes (separate from loading to avoid re-fetching audio)
+  /*
   useEffect(() => {
     sfxEffects.forEach(effect => {
       const gainNode = sfxAudioDataRef.current.get(effect.id)?.gain;
@@ -172,6 +180,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
       }
     });
   }, [sfxEffects.map(effect => `${effect.id}:${effect.gain}`).join(',')]); // Only depend on gain values
+  */
 
   // Handle main volume changes
   useEffect(() => {
@@ -222,7 +231,9 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
           mainSourceRef.current = source;
         }
 
+        // SFX functionality commented out for MVP
         // Start any SFX that aren't already playing
+        /*
         sfxEffects.forEach(effect => {
           const existing = sfxAudioDataRef.current.get(effect.id);
           if (existing && (!existing.source || existing.source.context.state === 'suspended')) {
@@ -235,6 +246,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
             existing.source = source;
           }
         });
+        */
 
         setIsPlaying(true);
       } catch (error) {
@@ -242,7 +254,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
         toast.error('Failed to resume audio');
       }
     }
-  }, [isPlaying, sfxEffects]);
+  }, [isPlaying]); // Removed sfxEffects dependency since SFX is commented out
 
   return (
     <div className="audio-mixer p-4 bg-gray-100 rounded-lg">
@@ -269,6 +281,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
         </div>
       </div>
 
+      {/* SFX controls commented out for MVP
       {sfxEffects.length > 0 && (
         <div className="sfx-controls">
           <h3 className="font-medium mb-2">SFX Effects:</h3>
@@ -291,6 +304,7 @@ export function AudioMixer({ mainAudioUrl, sfxEffects, onGainChange }: AudioMixe
           </div>
         </div>
       )}
+      */}
     </div>
   );
 }

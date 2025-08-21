@@ -1,5 +1,8 @@
 "use client";
 
+// SFXSelector component - COMMENTED OUT FOR MVP
+// SFX functionality moved to LATER section of migration plan
+/*
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { trpc } from '@/lib/trpcClient';
 import { toast } from 'sonner';
@@ -208,3 +211,6 @@ export function SFXSelector({ spaceId, currentSFX, onSFXChange }: SFXSelectorPro
     </div>
   );
 }
+
+export const SFXSelector = () => null; // Placeholder for MVP
+*/
