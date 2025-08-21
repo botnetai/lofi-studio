@@ -65,7 +65,7 @@ export default function SpacesPage() {
         {isLoading && (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="p-6">
+              <div key={i} className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
                 <div className="animate-pulse">
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
@@ -79,7 +79,7 @@ export default function SpacesPage() {
                     <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded w-20"></div>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
