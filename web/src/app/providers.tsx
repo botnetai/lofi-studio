@@ -28,7 +28,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 					// Refetch on window focus only for important queries
 					refetchOnWindowFocus: false,
 					// Refetch on mount only if data is stale
-					refetchOnMount: 'if-stale',
+					refetchOnMount: true,
 				},
 				mutations: {
 					// Retry mutations once on network errors

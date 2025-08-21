@@ -2,12 +2,11 @@ import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { invokeFal } from '@/server/lib/fal';
 import { IMAGE_MODEL_SCHEMAS } from '@/lib/falModels';
-import { z } from 'zod';
 import { putObjectToR2, publicR2Url } from '@/server/lib/r2';
 
 export const artworkRouter = router({
   create: publicProcedure
-    .input(z.object({ modelId: z.string().min(1), params: z.record(z.any()) }))
+    .input(z.object({ modelId: z.string().min(1), params: z.record(z.string(), z.any()) }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.user) throw new Error('Unauthorized');
       // Validate model against schema

@@ -17,7 +17,8 @@ export default function ManageSpacePage() {
   const reorder = trpc.songs.reorder.useMutation({ onSuccess: () => songs.refetch() });
   const artworks = trpc.artwork.list.useQuery({}, { enabled: !!space.data?.id });
   const videos = trpc.video.list.useQuery({}, { enabled: !!space.data?.id });
-  const spaceSFX = trpc.sfx.getSpaceEffects.useQuery({ spaceId: space.data?.id ?? '' }, { enabled: !!space.data?.id });
+  // SFX functionality commented out for MVP
+  // const spaceSFX = trpc.sfx.getSpaceEffects.useQuery({ spaceId: space.data?.id ?? '' }, { enabled: !!space.data?.id });
 
   useEffect(() => {
     if (space.data) {
@@ -113,6 +114,8 @@ export default function ManageSpacePage() {
         </div>
       </section>
 
+      {/* SFX functionality commented out for MVP */}
+      {/*
       <section className="space-y-2">
         <h2 className="font-medium">SFX Effects</h2>
         <SFXSelector
@@ -121,6 +124,7 @@ export default function ManageSpacePage() {
           onSFXChange={() => spaceSFX.refetch()}
         />
       </section>
+      */}
 
       <button className="text-red-600 underline" onClick={() => del.mutate({ id: space.data!.id })}>Delete Space</button>
     </main>

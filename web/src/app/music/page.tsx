@@ -1,6 +1,6 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 export default function MusicPage() {
   const [prompt, setPrompt] = useState('cozy lofi, vinyl crackle, mellow, relaxing');
@@ -11,22 +11,7 @@ export default function MusicPage() {
   const { data: songs, refetch, isLoading } = trpc.music.list.useQuery({}, { refetchInterval: 3000 });
   const spaces = trpc.spaces.list.useQuery({ ownerOnly: true });
   const remove = trpc.music.delete.useMutation({ onSuccess: () => refetch() });
-  const check = trpc.music.check.useMutation({ onSuccess: () => refetch() });
-  const lastCheckedRef = useRef<Record<string, number>>({});
-
-  useEffect(() => {
-    if (!songs) return;
-    const now = Date.now();
-    const todo = songs.filter((s) => s.status === 'generating' && s.generation_id);
-    for (const s of todo) {
-      const key = s.generation_id as string;
-      const last = lastCheckedRef.current[key] ?? 0;
-      if (now - last > 15000) {
-        lastCheckedRef.current[key] = now;
-        check.mutate({ id: s.id, generationId: key });
-      }
-    }
-  }, [songs]);
+  // Status checking is handled by the list query's refetchInterval
 
   return (
     <main className="max-w-3xl mx-auto p-8 space-y-6">

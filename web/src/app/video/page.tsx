@@ -1,6 +1,6 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { T2V_MODELS, I2V_MODELS, getDefaultModelId } from '@/lib/falModels';
 import { DynamicModelForm } from '@/components/DynamicModelForm';
 

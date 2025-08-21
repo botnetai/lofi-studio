@@ -1,4 +1,4 @@
-import { supabaseServer } from './supabase';
+import { getServerSupabaseClient } from '../supabaseServer';
 import { fetchStatus } from './elevenlabs';
 import { invokeFal } from './fal';
 
@@ -16,7 +16,7 @@ interface StuckGeneration {
 }
 
 export async function reconcileStuckGenerations() {
-  const supabase = supabaseServer();
+  const supabase = await getServerSupabaseClient();
 
   try {
     console.log('Running reconciler to check for stuck generations...');
@@ -81,7 +81,7 @@ export async function reconcileStuckGenerations() {
 }
 
 async function processStuckMusicGenerations(generations: StuckGeneration[]) {
-  const supabase = supabaseServer();
+  const supabase = await getServerSupabaseClient();
 
   for (const generation of generations) {
     try {
@@ -134,7 +134,7 @@ async function processStuckMusicGenerations(generations: StuckGeneration[]) {
 }
 
 async function processStuckArtworkGenerations(generations: any[]) {
-  const supabase = supabaseServer();
+  const supabase = await getServerSupabaseClient();
 
   for (const generation of generations) {
     try {
@@ -154,7 +154,7 @@ async function processStuckArtworkGenerations(generations: any[]) {
 }
 
 async function processStuckVideoGenerations(generations: any[]) {
-  const supabase = supabaseServer();
+  const supabase = await getServerSupabaseClient();
 
   for (const generation of generations) {
     try {

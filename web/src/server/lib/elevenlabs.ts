@@ -46,7 +46,7 @@ export async function startGeneration(params: {
   requestId?: string;
 }): Promise<{ generationId: string }> {
   const apiKey = requireEnv('ELEVENLABS_API_KEY');
-  const requestId = params.requestId || logger.generateRequestId();
+  const requestId = params.requestId || `elevenlabs-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   logger.info('Starting ElevenLabs music generation', {
     requestId,
@@ -54,7 +54,7 @@ export async function startGeneration(params: {
     prompt: params.prompt.substring(0, 100) + '...'
   });
 
-  const metricsHelper = withMetrics('elevenlabs_start_generation', undefined, {
+  const metricsHelper = withMetrics<{ generationId: string }>('elevenlabs_start_generation', undefined, {
     promptLength: params.prompt.length,
     hasTitle: !!params.title
   });
@@ -90,7 +90,7 @@ export async function startGeneration(params: {
       generationId: result.generationId
     });
 
-    return metricsHelper.success(result, { generationId: result.generationId });
+    return metricsHelper.success({ generationId: result.generationId }, { generationId: result.generationId });
   } catch (error) {
     logger.error('ElevenLabs generation start failed', {
       requestId,

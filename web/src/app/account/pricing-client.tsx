@@ -1,6 +1,10 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
 
+interface PortalResponse {
+  url?: string;
+}
+
 export function BillingClient() {
   const sub = trpc.billing.getSubscription.useQuery();
   const portal = trpc.billing.createPortalSession.useMutation();
@@ -11,7 +15,8 @@ export function BillingClient() {
         className="underline"
         onClick={async () => {
           const res = await portal.mutateAsync();
-          if ((res as any)?.url) window.location.href = (res as any).url;
+          const portalResponse = res as PortalResponse;
+          if (portalResponse?.url) window.location.href = portalResponse.url;
         }}
       >
         Manage billing

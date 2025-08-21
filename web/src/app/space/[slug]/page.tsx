@@ -1,6 +1,6 @@
 "use client";
 import { trpc } from '@/lib/trpcClient';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import AudioMixer to reduce initial bundle size
@@ -9,8 +9,16 @@ const AudioMixer = dynamic(() => import('@/components/AudioMixer').then(mod => m
   ssr: false // Audio components don't need SSR
 });
 
-export default function SpacePublicPage({ params }: { params: { slug: string } }) {
-  const space = trpc.spaces.getBySlug.useQuery({ slug: params.slug });
+export default function SpacePublicPage({ params }: { params: Promise<{ slug: string }> }) {
+  const [spaceData, setSpaceData] = useState<{ slug: string } | null>(null);
+
+  useEffect(() => {
+    params.then(setSpaceData);
+  }, [params]);
+
+  const space = trpc.spaces.getBySlug.useQuery(
+    spaceData ? { slug: spaceData.slug } : { slug: '00000000-0000-0000-0000-000000000000' }
+  );
 
   // Memoize space data to prevent unnecessary re-queries
   const spaceId = space.data?.id;
@@ -36,12 +44,12 @@ export default function SpacePublicPage({ params }: { params: { slug: string } }
   const backgroundVideoId = space.data?.background_video_id;
 
   const artworks = trpc.artwork.list.useQuery(
-    { cursor: undefined, limit: 100 },
+    { limit: 100 },
     { enabled: !!backgroundArtworkId }
   );
 
   const videos = trpc.video.list.useQuery(
-    { cursor: undefined, limit: 100 },
+    { limit: 100 },
     { enabled: !!backgroundVideoId }
   );
 
@@ -109,8 +117,8 @@ export default function SpacePublicPage({ params }: { params: { slug: string } }
           <h2 className="font-medium mb-2">Audio Experience</h2>
           <AudioMixer
             mainAudioUrl={mainAudioUrl}
-            sfxEffects={[]} {/* SFX commented out for MVP */}
-            onGainChange={() => {}} {/* Placeholder for MVP */}
+            sfxEffects={[]}
+            onGainChange={() => {}}
           />
         </section>
       )}
@@ -131,5 +139,3 @@ export default function SpacePublicPage({ params }: { params: { slug: string } }
     </main>
   );
 }
-
-
