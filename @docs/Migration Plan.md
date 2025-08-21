@@ -550,30 +550,30 @@ Acceptance Criteria
 - [x] `/account` displays plan and a working "Manage billing" link; `/pricing` shows correct plan options.
 
 #### Phase 6: SFX Overlays
-- [ ] SFX catalog seeded (`sfx_effects`), UI selector with categories and live preview.
-- [ ] Web Audio API mixers on web; `expo-av` dual playback on mobile with gain controls.
-- [ ] Persist per-Space selections (`space_sfx`) and default gains; apply on Space load.
+- [x] SFX catalog seeded (`sfx_effects`), UI selector with categories and live preview.
+- [x] Web Audio API mixers on web; `expo-av` dual playback on mobile with gain controls.
+- [x] Persist per-Space selections (`space_sfx`) and default gains; apply on Space load.
 - [ ] Optional: basic export pre-mix (server or external service) to create shareable merged audio in R2.
-- [ ] Deliverables: users can layer ambient SFX over tracks in Spaces and share the experience.
+- [x] Deliverables: users can layer ambient SFX over tracks in Spaces and share the experience.
 
 Acceptance Criteria
-- [ ] Users can add one or more SFX overlays on top of a playing track on web; gains are adjustable and persist per space.
+- [x] Users can add one or more SFX overlays on top of a playing track on web; gains are adjustable and persist per space.
 - [ ] On mobile (Expo), two-sound playback (base+SFX) works with independent gain controls.
-- [ ] SFX selections are persisted (`space_sfx` or metadata) and applied when loading a Space.
+- [x] SFX selections are persisted (`space_sfx` or metadata) and applied when loading a Space.
 
 ### Phase 7: Optimizations, Documentation, Hardening
-- [ ] Performance & UX
-  - [ ] Optimize initial page loads and route transitions; audit bundle size and enable code-splitting where needed.
-  - [ ] Use HTTP caching where safe for public assets; prefetch queries in Space view.
-  - [ ] Reduce client re-renders in playlist and artwork grids; memoization where appropriate.
-- [ ] Resilience & Reliability
-  - [ ] Add standardized retry/backoff for provider/network failures.
-  - [ ] Implement reconciler job to resolve stuck `generating` > N minutes (mark failed or retry).
-  - [ ] Idempotency guards around external calls; ensure safe replays.
-- [ ] Observability & Runbooks
-  - [ ] Structured logs with request IDs; surface key metrics (generation latency, error rates, webhook successes).
+- [x] Performance & UX
+  - [x] Optimize initial page loads and route transitions; audit bundle size and enable code-splitting where needed.
+  - [x] Use HTTP caching where safe for public assets; prefetch queries in Space view.
+  - [x] Reduce client re-renders in playlist and artwork grids; memoization where appropriate.
+- [x] Resilience & Reliability
+  - [x] Add standardized retry/backoff for provider/network failures.
+  - [x] Implement reconciler job to resolve stuck `generating` > N minutes (mark failed or retry).
+  - [x] Idempotency guards around external calls; ensure safe replays.
+- [x] Observability & Runbooks
+  - [x] Structured logs with request IDs; surface key metrics (generation latency, error rates, webhook successes).
   - [ ] Sentry (optional) wired for server and client with sensible sampling.
-  - [ ] Document runbooks for stuck jobs, missing R2 objects, and webhook failures.
+  - [x] Document runbooks for stuck jobs, missing R2 objects, and webhook failures.
 - [ ] Security & Ops Hygiene
   - [ ] Finalize Vercel envs; document secrets rotation; tighten permissions.
   - [ ] Least-privilege R2 credentials; lifecycle rules for temp files.
@@ -581,9 +581,9 @@ Acceptance Criteria
   - [ ] Introduce provider webhooks for ElevenLabs and Fal.ai; replace polling with idempotent webhook processing.
 
 Acceptance Criteria
-- [ ] Measurable improvements to page load and interaction timings (define target budgets; e.g., Space TTI < 2.0s on mid-tier device).
-- [ ] Reconciler detects and resolves stuck jobs in a test scenario; retries respect backoff and idempotency.
-- [ ] Logs/metrics available for key flows; at least one runbook per major failure mode is in the repo.
+- [x] Measurable improvements to page load and interaction timings (define target budgets; e.g., Space TTI < 2.0s on mid-tier device).
+- [x] Reconciler detects and resolves stuck jobs in a test scenario; retries respect backoff and idempotency.
+- [x] Logs/metrics available for key flows; at least one runbook per major failure mode is in the repo.
 - [ ] No PII in logs; environment variables and secrets documented; R2 lifecycle rules active for temp objects.
 
 ---
